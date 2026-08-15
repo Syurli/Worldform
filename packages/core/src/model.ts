@@ -1,4 +1,5 @@
 export type SceneNodeId = string
+export type SceneResourceId = string
 
 export type Vec3 = readonly [x: number, y: number, z: number]
 export type Quat = readonly [x: number, y: number, z: number, w: number]
@@ -7,6 +8,31 @@ export interface TransformData {
   position: Vec3
   rotation: Quat
   scale: Vec3
+}
+
+/** 指向同一份 SceneDocument 中节点的通用引用。 */
+export interface SceneNodeReference {
+  kind: 'node'
+  nodeId: SceneNodeId
+}
+
+/** 指向 SceneDocument 资源表条目的通用引用。 */
+export interface SceneResourceReference {
+  kind: 'resource'
+  resourceId: SceneResourceId
+}
+
+export type SceneReference = SceneNodeReference | SceneResourceReference
+
+/**
+ * Core 只记录资源身份和位置，不解释具体资源格式或加载方式。
+ * 资源导入、构建与运行时解析仍由 Editor、Adapter 或 Bridge 负责。
+ */
+export interface SceneResource {
+  id: SceneResourceId
+  uri: string
+  type?: string
+  metadata?: Readonly<Record<string, unknown>>
 }
 
 export interface SceneNode {
@@ -20,6 +46,11 @@ export interface SceneNode {
    * Project Adapter 负责为具体 component 提供 schema、编辑器和校验。
    */
   components?: Readonly<Record<string, unknown>>
+  /**
+   * Core 能够检查的显式通用引用。业务组件内部的引用语义仍归 Adapter 所有，
+   * Core 不会猜测 components 或 metadata 中的任意字符串是否为引用。
+   */
+  references?: Readonly<Record<string, SceneReference | readonly SceneReference[]>>
   tags?: readonly string[]
   metadata?: Readonly<Record<string, unknown>>
 }
@@ -30,6 +61,7 @@ export interface SceneDocument {
   projectAdapterId?: string
   nodes: Readonly<Record<SceneNodeId, SceneNode>>
   rootNodeIds: readonly SceneNodeId[]
+  resources?: Readonly<Record<SceneResourceId, SceneResource>>
   metadata?: Readonly<Record<string, unknown>>
 }
 
@@ -51,7 +83,5 @@ export function createEmptySceneDocument(input: {
     rootNodeIds: [],
   }
 
-  return input.projectAdapterId
-    ? { ...base, projectAdapterId: input.projectAdapterId }
-    : base
+  return input.projectAdapterId ? { ...base, projectAdapterId: input.projectAdapterId } : base
 }

@@ -32,3 +32,14 @@
 - JSON round-trip 不丢失语义；
 - migration API 有测试样例；
 - `pnpm check && pnpm test` 通过。
+
+## 实施记录
+
+- 状态：已完成；
+- Patch 通过 `applyScenePatchesWithInverse()` 生成可独立检查的逆 Patch；
+- `SceneHistory` 以 `SceneChange { patches, inversePatches }` 统一 apply / undo / redo；
+- `update.unset`、`rootIndex` 与父级优先的子树恢复保证可选字段、根顺序和级联删除可逆；
+- 稳定 JSON 使用确定性对象键排序，并拒绝循环、非有限数值和非 JSON 值；
+- migration 使用显式 `fromVersion -> toVersion` 链，不绑定具体版本号方案；
+- 通用引用只检查 `SceneNode.references`，不猜测项目组件内部语义；
+- 详细 API 与边界见 `packages/core/README.md`。

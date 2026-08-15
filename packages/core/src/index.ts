@@ -1,3 +1,6 @@
+export * from './history.js'
+export * from './migration.js'
 export * from './model.js'
 export * from './patch.js'
+export * from './serialization.js'
 export * from './validation.js'
