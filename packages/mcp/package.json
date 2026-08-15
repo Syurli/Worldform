@@ -1,0 +1,16 @@
+{
+  "name": "@worldform/mcp",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@worldform/core": "workspace:*",
+    "@worldform/adapter-api": "workspace:*"
+  }
+}
