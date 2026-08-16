@@ -88,7 +88,7 @@ Worldform/
    └─ tasks/
 ```
 
-`packages/workspace` 已实现统一应用管线与 AdapterHost；`packages/adapter-sdk` 已提供 descriptor helper、基础 schema 验证和 contract report。
+`packages/workspace` 已实现统一应用管线与 AdapterHost；`packages/adapter-sdk` 已提供 descriptor helper、基础 schema 验证和 contract report；Pascal Authoring Alpha 已可使用通用 Example Adapter完成场景树、3D 选择、Gizmo、动态 Inspector、Draft、验证和 Undo/Redo。
 
 ## 当前阶段
 
@@ -104,10 +104,11 @@ Phase 1 的完成标准不是“已经支持两款游戏”，而是：
 pnpm install
 pnpm check
 pnpm test
+pnpm --filter @worldform/editor-host dev
 ```
 
-当前 Core 基线已经具备 SceneDocument、Patch/Inverse Patch、History、稳定序列化、Migration 与结构校验。下一步优先收口协议和统一应用层，不直接进入任何游戏 Adapter。
+当前 Core 契约、Workspace、Adapter SDK/Host、Example Adapter 与 Pascal Authoring Alpha 已完成。Phase 1 继续推进 CLI、MCP、第三方开发者包和 Clean-room 验收，不进入任何游戏 Adapter。
 
 ## 许可说明
 
-Worldform 自身最终开源许可尚待单独确认。Pascal Editor 与 Aedifex 为独立上游项目；任何后续代码复用、分发与归属均必须保留对应上游许可与归属信息。
+Worldform 自身最终开源许可尚待单独确认。Pascal Editor 与 Aedifex 为独立上游项目；任何后续代码复用、分发与归属均必须保留对应上游许可与归属信息。当前直接集成记录见 [`docs/THIRD_PARTY_NOTICES.md`](docs/THIRD_PARTY_NOTICES.md)。

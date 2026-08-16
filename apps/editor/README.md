@@ -4,7 +4,7 @@
 
 ## Phase 1 状态
 
-当前只建立依赖边界，不提前锁定 React / Next / Pascal 具体版本。P1-005 才正式完成 Pascal Authoring Alpha。
+P1-005 Pascal Authoring Alpha 已完成。当前宿主使用 Pascal `core/viewer@0.9.2`、React 19、Three 0.185 和 Vite 7，业务语义完全由 Example Adapter 的 descriptor/schema 驱动。
 
 ## 依赖方向
 
@@ -20,21 +20,25 @@ Core + Adapter Host
 Pascal Authoring Projection / Project Adapter
 ```
 
-## P1-005 目标
+## 运行
 
-使用通用 `examples/example-adapter` 验证 Scene Tree、Selection、Gizmo、Inspector、动态项目属性、Patch、Validate 与 Undo/Redo。
+```bash
+pnpm --filter @worldform/editor-host dev
+pnpm --filter @worldform/editor-host build
+```
+
+页面包含 Scene Tree、Pascal WebGPU 3D Viewport、通用选择、移动/旋转 Gizmo、创建/删除、动态 Inspector、Validate、DraftChange 和 Undo/Redo。
+
+任何创建、删除、Inspector 或 Gizmo 修改都会先成为 `ScenePatch[]` 和 `DraftChange`，再由 Workspace Apply。Pascal Store 只保留可随时重建的工作副本。
 
 不得使用《战术巫师》或《物有所归》作为 Editor API 的唯一设计来源。
 
-## 后续职责
+## 当前边界与后续职责
 
-- Pascal/Three Authoring View；
-- Scene Tree / Inspector；
-- Adapter 面板；
-- Validation 与 DraftChange；
-- Ghost Preview；
-- Project Preview 入口；
-- 后续 Director 工作区。
+- 已实现 Pascal/Three Authoring View、Scene Tree、Inspector、Validation 与 DraftChange；
+- P1-007 增加 MCP Ghost Preview 联动；
+- Project Preview 与 Director 工作区保留到后续阶段；
+- Pascal 自带 Building/Level/Zone 选择策略不适用于通用节点，宿主使用 Pascal emitter/registry/outliner 上的通用选择管理器。
 
 ## 明确禁止
 

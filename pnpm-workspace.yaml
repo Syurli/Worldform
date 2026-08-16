@@ -2,3 +2,9 @@ packages:
   - "apps/*"
   - "packages/*"
   - "examples/*"
+
+# Vite 的平台编译器需要在安装期选择当前操作系统二进制；其余依赖脚本仍默认禁止。
+onlyBuiltDependencies:
+  - esbuild
+allowBuilds:
+  esbuild: true

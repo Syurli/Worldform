@@ -60,7 +60,7 @@ Editor、CLI、MCP 后续只能调用这一层。
 
 Example Adapter 只包含 Box / Prop / Marker / Zone / TestComponent 等无业务节点。
 
-## P1-005 Pascal Authoring Alpha
+## P1-005 Pascal Authoring Alpha — 已完成
 
 用通用 Example Adapter 验证：
 
@@ -74,7 +74,7 @@ Example Adapter 只包含 Box / Prop / Marker / Zone / TestComponent 等无业�
 - Undo/Redo；
 - Authoring Preview。
 
-只有这一步通过后才决定 Pascal 上游锁定版本与补丁策略。
+已锁定 Pascal `core/viewer@0.9.2` 与 npm `gitHead`，通过隔离层补足通用选择和 Gizmo；具体分工与升级策略见 ADR-008。
 
 ## P1-006 CLI
 

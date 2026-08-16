@@ -183,6 +183,10 @@ Workspace
 
 Pascal PoC 必须使用通用 Example Adapter，不依赖 TWR / Place 语义，以证明未知项目节点可以通过 descriptor/schema 被编辑器呈现。
 
+P1-005 已锁定 Pascal `@pascal-app/core` / `viewer@0.9.2`。隔离层只注册一个 namespaced 通用节点，真实类型和 Inspector 继续由 Adapter descriptor 驱动。Pascal 默认 Building/Level/Zone selection 与公共 Gizmo API 不满足通用宿主需求，因此 Editor 在公开 emitter/registry/outliner 之上提供薄的通用选择管理和 Drei TransformControls；所有结果仍由投影差异转换为 Patch。
+
+Workspace 独占 revision 与 Undo/Redo。Pascal history 和 Store 都不是正式状态，详见 ADR-008。
+
 ## 10. Agent Interface
 
 三级入口：

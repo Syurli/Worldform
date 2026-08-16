@@ -11,7 +11,7 @@ P1-003 Workspace / Session ✅
            ↓
 P1-004 Adapter SDK + Example Adapter ✅
            ↓
-P1-005 Pascal Authoring Alpha
+P1-005 Pascal Authoring Alpha ✅
            ↓
 P1-006 CLI
            ↓
@@ -35,7 +35,7 @@ P1-009 Clean-room Validation
 - `P1-002_CORE_CONTRACT_HARDENING.md` — 已完成
 - `P1-003_WORKSPACE_SESSION.md` — 已完成
 - `P1-004_ADAPTER_SDK_EXAMPLE.md` — 已完成
-- `P1-005_PASCAL_AUTHORING_ALPHA.md`
+- `P1-005_PASCAL_AUTHORING_ALPHA.md` — 已完成
 - `P1-006_CLI_VALIDATION.md`
 - `P1-007_MCP_GHOST_PREVIEW.md`
 - `P1-008_THIRD_PARTY_DEVELOPER_KIT.md`
