@@ -100,6 +100,8 @@ Phase 1 的完成标准不是“已经支持两款游戏”，而是：
 
 ## 开发
 
+Windows 可直接双击仓库根目录的 [`启动万类编辑器.cmd`](启动万类编辑器.cmd)。脚本会检查 Node.js 版本、按锁文件同步 pnpm 依赖，并在 Vite 服务就绪后自动打开编辑器页面；按 `Ctrl+C` 停止服务。
+
 ```bash
 pnpm install
 pnpm check
