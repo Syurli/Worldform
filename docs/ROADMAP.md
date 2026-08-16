@@ -76,7 +76,7 @@ Example Adapter 只包含 Box / Prop / Marker / Zone / TestComponent 等无业�
 
 已锁定 Pascal `core/viewer@0.9.2` 与 npm `gitHead`，通过隔离层补足通用选择和 Gizmo；具体分工与升级策略见 ADR-008。
 
-## P1-006 CLI
+## P1-006 CLI — 已完成
 
 正式实现首批命令：
 
@@ -88,6 +88,8 @@ worldform export
 ```
 
 CLI 必须调用 Workspace / Adapter Host，而不是复制一套逻辑。
+
+已提供人类/JSON 双输出、稳定退出码、动态 Adapter 加载、Core + Adapter 验证与正式 Node bin。
 
 ## P1-007 MCP + Ghost Preview
 

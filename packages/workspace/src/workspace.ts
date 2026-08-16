@@ -120,19 +120,30 @@ export class WorldformWorkspace {
   /** 执行 Core → Adapter 的统一验证管线，并把结果写回 Draft。 */
   public async validateDraft(draftId: string): Promise<DraftChange> {
     const preview = this.previewDraft(draftId)
-    const results: ValidationResult[] = [validateSceneDocument(preview.document)]
+    const validation = await this.validateDocument(preview.document)
+
+    const stored = this.requirePreviewDraft(draftId)
+    stored.validation = cloneWorkspaceData(validation)
+    this.emit({ type: 'draft.validated', revision: this.#revision, draftId })
+    return cloneWorkspaceData(stored)
+  }
+
+  /**
+   * 对当前正式文档或指定候选文档执行 Core → Adapter 验证管线。
+   * CLI 与只读工具使用此入口，避免为了验证而伪造空 Patch Draft。
+   */
+  public async validateDocument(
+    document: SceneDocument = this.getDocument(),
+  ): Promise<ValidationResult> {
+    const results: ValidationResult[] = [validateSceneDocument(document)]
     if (this.#adapterSession) {
       try {
-        results.push(await this.#adapterSession.validateDocument(preview.document))
+        results.push(await this.#adapterSession.validateDocument(document))
       } catch (error) {
         results.push(this.createAdapterFailureResult(this.#adapterSession.adapterId, error))
       }
     }
-
-    const stored = this.requirePreviewDraft(draftId)
-    stored.validation = cloneWorkspaceData(mergeValidationResults(...results))
-    this.emit({ type: 'draft.validated', revision: this.#revision, draftId })
-    return cloneWorkspaceData(stored)
+    return cloneWorkspaceData(mergeValidationResults(...results))
   }
 
   /** Apply 前始终重新验证，成功后作为一个 History Change 提交并增加 revision。 */

@@ -33,16 +33,18 @@ Skill 教 Agent 执行特定工作流，Markdown 文档解释协议与边界。
 
 ## 4. Level 2 — CLI
 
-规划首批命令：
+已实现首批命令：
 
 ```text
 worldform validate <scene>
 worldform adapter check <adapter>
 worldform inspect <scene>
-worldform export <scene> --target <target>
+worldform export <scene> --adapter <adapter> --target <target>
 ```
 
 CLI 面向 Agent、CI、批处理脚本和 Adapter 开发者。CLI 必须调用 Workspace/Adapter Host，不复制验证或 Adapter lifecycle。
+
+所有命令支持 `--json`。稳定退出码为：`0` 成功、`2` 参数错误、`3` 输入错误、`10` 验证失败、`11` Adapter 错误、`12` 其它执行错误。诊断保留 `code/source/sourceId/path/severity`。
 
 ## 5. Level 3 — MCP
 
@@ -104,6 +106,4 @@ DraftChange
 
 ## 9. 当前阶段
 
-现阶段已有 Markdown 入口、Core Patch/History 和 adapter-api 基线；CLI/MCP 仍是 contract-first 占位。
-
-P1-003 建立 Workspace 后，P1-006/P1-007 才正式实现 CLI/MCP。不要在 Workspace 之前让 MCP 成为新的应用层。
+现阶段 Markdown/Skill、Core、Workspace、Adapter SDK/Host、Editor 与 CLI 已可用；P1-007 正式实现 MCP 与 Ghost Preview。MCP 仍只能作为 Workspace 入口，不能成为新的应用层。

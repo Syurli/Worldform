@@ -113,6 +113,36 @@ describe('WorldformWorkspace Draft 管线', () => {
 })
 
 describe('WorldformWorkspace Adapter 与事件', () => {
+  it('可直接验证正式文档并复用 Core 与 Adapter 管线', async () => {
+    const workspace = new WorldformWorkspace(
+      createEmptySceneDocument({ id: 'direct-validation' }),
+      {
+        adapterSession: {
+          adapterId: 'warning.adapter',
+          validateDocument() {
+            return {
+              valid: true,
+              issues: [
+                {
+                  code: 'example.direct_warning',
+                  severity: 'warning',
+                  message: '直接验证警告',
+                  source: 'adapter',
+                },
+              ],
+            }
+          },
+        },
+      },
+    )
+
+    const validation = await workspace.validateDocument()
+
+    expect(validation.valid).toBe(true)
+    expect(validation.issues.map((issue) => issue.code)).toContain('example.direct_warning')
+    expect(workspace.getRevision()).toBe(0)
+  })
+
   it('Adapter validation issue 会合并并阻止 Apply', async () => {
     const adapterSession: WorkspaceAdapterSession = {
       adapterId: 'example.adapter',

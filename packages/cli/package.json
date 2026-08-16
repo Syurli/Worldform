@@ -3,14 +3,26 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "worldform": "./dist/bin.js"
+  },
   "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {
-    "check": "tsc -p tsconfig.json --noEmit"
+    "build": "node scripts/build.mjs",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
+    "@worldform/adapter-api": "workspace:*",
+    "@worldform/adapter-sdk": "workspace:*",
     "@worldform/core": "workspace:*",
-    "@worldform/adapter-api": "workspace:*"
+    "@worldform/workspace": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@worldform/example-adapter": "workspace:*",
+    "esbuild": "0.28.2"
   }
 }
