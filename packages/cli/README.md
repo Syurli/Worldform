@@ -1,5 +1,7 @@
 # @worldform/cli
 
+当前 Platform Alpha 包版本为 `0.1.0-alpha.1`；安装后提供 `worldform` bin。
+
 Worldform 面向开发者、Agent 与 CI 的无交互命令行。CLI 读取正式 `SceneDocument`，并复用 Workspace、Adapter Host 与 Adapter SDK，不维护独立验证或修改逻辑。
 
 ## 命令

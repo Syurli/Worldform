@@ -1,0 +1,32 @@
+{
+  "name": "@example/worldform-hello-adapter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "adapter:check": "worldform adapter:check ./dist/index.js --json",
+    "scene:validate": "worldform validate ./scene.worldform.json --adapter ./dist/index.js --json"
+  },
+  "dependencies": {
+    "@worldform/adapter-api": "0.1.0-alpha.1",
+    "@worldform/adapter-sdk": "0.1.0-alpha.1",
+    "@worldform/core": "0.1.0-alpha.1"
+  },
+  "devDependencies": {
+    "@worldform/cli": "0.1.0-alpha.1",
+    "@worldform/mcp": "0.1.0-alpha.1",
+    "@types/node": "^24.0.0",
+    "typescript": "^6.0.0",
+    "vitest": "^4.0.0"
+  }
+}

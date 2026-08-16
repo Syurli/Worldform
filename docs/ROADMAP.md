@@ -109,7 +109,7 @@ MCP 不提供任意文件系统或任意代码执行能力。
 
 已实现官方 v2 stdio MCP、15 个结构化工具、baseRevision/Draft 强制管线、Workspace Ghost diff 和同进程 Editor 联动。
 
-## P1-008 Third-party Developer Kit
+## P1-008 Third-party Developer Kit — 已完成
 
 整理真正给外部项目使用的入口：
 
@@ -121,6 +121,8 @@ MCP 不提供任意文件系统或任意代码执行能力。
 - CLI/MCP 配置示例；
 - 兼容性说明；
 - package/build/distribution 策略。
+
+已提供 Alpha 公共 package 组、dist-only tarball、最小外部模板、完整接入指南、兼容矩阵与仓库外安装验收报告。
 
 ## P1-009 Clean-room Validation
 

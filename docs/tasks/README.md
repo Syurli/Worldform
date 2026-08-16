@@ -17,7 +17,7 @@ P1-006 CLI ✅
            ↓
 P1-007 MCP + Ghost Preview ✅
            ↓
-P1-008 Third-party Developer Kit
+P1-008 Third-party Developer Kit ✅
            ↓
 P1-009 Clean-room Validation
            ↓
@@ -38,7 +38,7 @@ P1-009 Clean-room Validation
 - `P1-005_PASCAL_AUTHORING_ALPHA.md` — 已完成
 - `P1-006_CLI_VALIDATION.md` — 已完成
 - `P1-007_MCP_GHOST_PREVIEW.md` — 已完成
-- `P1-008_THIRD_PARTY_DEVELOPER_KIT.md`
+- `P1-008_THIRD_PARTY_DEVELOPER_KIT.md` — 已完成
 - `P1-009_CLEAN_ROOM_VALIDATION.md`
 
 原 `P1-003_TWR_ADAPTER_SPIKE` 与 `P1-004_PLACE_ADAPTER_SPIKE` 已从 Phase 1 移除，对应规划见 `phase2/`。

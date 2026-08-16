@@ -24,7 +24,7 @@ Project Adapter
 
 ### `@worldform/adapter-sdk`
 
-面向第三方开发者的便利层，已提供 schema/descriptor helper、fixture、contract report 与诊断入口；模板和发布流程在 P1-008 完成。
+面向第三方开发者的便利层，提供 schema/descriptor helper、fixture、contract report 与诊断入口；可运行模板位于 `templates/adapter-minimal`，打包流程见 `PACKAGING.md`。
 
 ### Adapter Host
 
@@ -60,7 +60,7 @@ Capability 可以返回：
 
 Core 的 `SceneNode.components` 是通用容器，业务 schema 与编辑方式由 Adapter 声明。
 
-P1-004 将建立 descriptor/schema 边界，使 Editor 不需要预先知道项目节点：
+当前 descriptor/schema 边界使 Editor 不需要预先知道项目节点：
 
 ```text
 Adapter 注册未知 Node/Component
@@ -72,7 +72,7 @@ Editor 读取 descriptor/schema
 ScenePatch
 ```
 
-这项能力先由通用 Example Adapter 验证，禁止直接拿 TWR/Place 作为唯一设计来源。
+这项能力已由通用 Example Adapter 验证，禁止直接拿 TWR/Place 作为唯一设计来源。
 
 ## 6. Validator 分层
 
@@ -137,4 +137,4 @@ YourGame/
 - 不依赖 Pascal/Three 内部持久化；
 - 能在不修改 Worldform 的情况下加载和验证。
 
-完整外部接入流程见 `THIRD_PARTY_INTEGRATION.md`。
+完整外部接入流程见 `THIRD_PARTY_INTEGRATION.md`，版本组合见 `COMPATIBILITY.md`。

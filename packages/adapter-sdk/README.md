@@ -1,5 +1,7 @@
 # @worldform/adapter-sdk
 
+当前 Platform Alpha 包版本为 `0.1.0-alpha.1`。新项目可从 `templates/adapter-minimal` 开始，并按 `docs/THIRD_PARTY_INTEGRATION.md` 完成验收。
+
 第三方 Project Adapter 的开发辅助层。稳定业务协议位于 `@worldform/adapter-api`；SDK 提供类型推断 helper、descriptor 基础验证、fixture 与 contract report。
 
 ## 入口

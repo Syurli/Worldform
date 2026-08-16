@@ -1,5 +1,7 @@
 # @worldform/workspace
 
+当前 Platform Alpha 包版本为 `0.1.0-alpha.1`，第三方宿主应只通过本包统一管理 Draft、Preview、Apply 与 History。
+
 `@worldform/workspace` 是 Editor、CLI 与 MCP 共用的唯一 Worldform 应用层。它不依赖 React、Pascal、Three.js、CLI parser、MCP SDK 或具体项目代码。
 
 ## 权威状态

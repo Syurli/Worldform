@@ -1,14 +1,16 @@
 {
   "name": "worldform",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0-alpha.1",
   "description": "万类 Worldform — 通用场景与空间内容编辑框架",
   "scripts": {
-    "build": "pnpm -r --if-present build",
+    "build": "pnpm run build:packages && pnpm --filter @worldform/editor-host build",
+    "build:packages": "pnpm -r --if-present --filter \"./packages/**\" --filter @worldform/example-adapter build",
     "check": "pnpm -r --if-present check",
-    "test": "pnpm -r --if-present test",
+    "test": "pnpm run build:packages && pnpm -r --if-present test",
     "format": "biome format --write .",
-    "lint": "biome lint ."
+    "lint": "biome lint .",
+    "pack:packages": "pnpm run build:packages && node scripts/pack-public-packages.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.0",

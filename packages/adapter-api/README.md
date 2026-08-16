@@ -1,5 +1,7 @@
 # @worldform/adapter-api
 
+当前 Platform Alpha 包版本为 `0.1.0-alpha.1`，应与 Core、SDK、Workspace、CLI/MCP 整组使用。
+
 Worldform 与第三方 Project Adapter 之间的小型稳定协议包。
 
 ## 公共契约

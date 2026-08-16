@@ -20,7 +20,9 @@
 
 1. `../docs/PROJECT_ADAPTER.md`
 2. `../docs/THIRD_PARTY_INTEGRATION.md`
-3. `../.agents/skills/worldform-adapter-development/SKILL.md`
+3. `../docs/COMPATIBILITY.md`
+4. `../.agents/skills/worldform-adapter-development/SKILL.md`
+5. `../templates/adapter-minimal/README.md`
 
 正式接入原则上只修改消费者项目，不修改 Worldform。
 
@@ -36,7 +38,7 @@
 
 ## 当前阶段
 
-当前为 Phase 1 / Platform Alpha。下一任务从 P1-002 开始：Core Contract Hardening → Workspace → Adapter SDK → 通用编辑器 → CLI/MCP → Clean-room。
+当前为 Phase 1 / Platform Alpha。Core、Workspace、Adapter SDK、Pascal Authoring Alpha、CLI、MCP 与第三方开发者包已完成；阶段门槛是 P1-009 Clean-room Validation。
 
 ## 常用检查
 

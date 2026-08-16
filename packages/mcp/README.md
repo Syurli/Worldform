@@ -1,5 +1,7 @@
 # @worldform/mcp
 
+当前 Platform Alpha 包版本为 `0.1.0-alpha.1`；安装后提供 `worldform-mcp` bin。
+
 Worldform 的官方 stdio MCP 入口。它使用 `@modelcontextprotocol/server@2.0.0` 的 `serveStdio(factory)`，同时服务当前 2026-era 与旧 2025-era 客户端。
 
 ## 启动

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "worldform": {
+      "command": "worldform-mcp",
+      "args": [
+        "--scene",
+        "./scene.worldform.json",
+        "--adapter",
+        "./dist/index.js"
+      ]
+    }
+  }
+}

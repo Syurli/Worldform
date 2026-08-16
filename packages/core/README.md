@@ -1,5 +1,7 @@
 # @worldform/core
 
+当前 Platform Alpha 包版本为 `0.1.0-alpha.1`；安装、整组兼容与本地 tarball 说明见仓库 `docs/COMPATIBILITY.md` 与 `docs/PACKAGING.md`。
+
 `@worldform/core` 是 Worldform 的纯 TypeScript 权威数据层，不依赖 UI、渲染器、物理引擎、Pascal 或具体项目代码。
 
 ## Platform Alpha 基线

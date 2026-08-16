@@ -1,5 +1,7 @@
 # @worldform/pascal-adapter
 
+当前 Platform Alpha 包版本为 `0.1.0-alpha.1`，并继续锁定 Pascal `0.9.2`。
+
 Pascal 作者视图的隔离层。它把权威 `SceneDocument` 投影为 Pascal 工作副本，并把视图中的变化重新收敛为 `ScenePatch[]`。
 
 ## 数据边界

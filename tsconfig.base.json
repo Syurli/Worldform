@@ -3,6 +3,16 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "paths": {
+      "@worldform/core": ["./packages/core/src/index.ts"],
+      "@worldform/adapter-api": ["./packages/adapter-api/src/index.ts"],
+      "@worldform/adapter-sdk": ["./packages/adapter-sdk/src/index.ts"],
+      "@worldform/workspace": ["./packages/workspace/src/index.ts"],
+      "@worldform/cli": ["./packages/cli/src/index.ts"],
+      "@worldform/mcp": ["./packages/mcp/src/index.ts"],
+      "@worldform/pascal-adapter": ["./packages/pascal-adapter/src/index.ts"],
+      "@worldform/example-adapter": ["./examples/example-adapter/src/index.ts"]
+    },
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,

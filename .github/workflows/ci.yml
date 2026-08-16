@@ -15,7 +15,7 @@ jobs:
           node-version: 22
       - uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 11
       - name: Install dependencies
         run: pnpm install
       - name: Type check
@@ -24,3 +24,5 @@ jobs:
         run: pnpm test
       - name: Lint
         run: pnpm lint
+      - name: Build distributable packages and editor
+        run: pnpm build

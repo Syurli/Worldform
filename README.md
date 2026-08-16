@@ -104,6 +104,9 @@ Phase 1 的完成标准不是“已经支持两款游戏”，而是：
 pnpm install
 pnpm check
 pnpm test
+pnpm lint
+pnpm build
+pnpm pack:packages
 pnpm --filter @worldform/editor-host dev
 pnpm --filter @worldform/cli build
 node packages/cli/dist/bin.js --help
@@ -111,7 +114,7 @@ pnpm --filter @worldform/mcp build
 node packages/mcp/dist/stdio.js --help
 ```
 
-当前 Core 契约、Workspace、Adapter SDK/Host、Example Adapter、Pascal Authoring Alpha、CLI、MCP 与 Ghost Preview 已完成。Phase 1 继续推进第三方开发者包和 Clean-room 验收，不进入任何游戏 Adapter。
+当前 Core 契约、Workspace、Adapter SDK/Host、Example Adapter、Pascal Authoring Alpha、CLI、MCP、Ghost Preview 与第三方开发者包已完成。外部开发从 [`templates/adapter-minimal`](templates/adapter-minimal) 与 [`docs/THIRD_PARTY_INTEGRATION.md`](docs/THIRD_PARTY_INTEGRATION.md) 开始；Phase 1 只剩 Clean-room 阶段门槛，不进入任何游戏 Adapter。
 
 ## 许可说明
 

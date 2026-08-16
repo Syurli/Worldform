@@ -1,5 +1,7 @@
 # Example Adapter
 
+当前发布为 `@worldform/example-adapter@0.1.0-alpha.1`，用于平台测试与 descriptor 参考，不包含真实项目业务。
+
 Phase 1 唯一正式业务语义测试 Adapter。它完全虚构，不代表《战术巫师》或《物有所归》。
 
 ## 注册内容
