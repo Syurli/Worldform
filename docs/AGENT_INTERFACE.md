@@ -2,235 +2,108 @@
 
 ## 1. 产品原则
 
-Worldform 本身不实现聊天机器人，也不绑定任何模型供应商。
+Worldform 不实现聊天机器人，也不绑定模型供应商。它负责让外部 Agent **可理解、可调用、可验证、可预览、可撤销**。
 
-不进入 Worldform 核心的内容：
+## 2. 两类 Agent 工作必须分开
 
-- 聊天窗口；
-- OpenAI / Anthropic / 本地模型 SDK；
-- API Key 管理；
-- Token 统计；
-- 模型路由；
-- 对话历史；
-- Agent Runtime。
+### 开发 Worldform
 
-对话发生在用户选择的 Codex、Claude Code 或其它外部 Agent 中。
+读取仓库 `AGENTS.md` 与 `.agents/skills/worldform-development/SKILL.md`，修改 Worldform 自己的代码与协议。
 
-Worldform 负责让这些 Agent **可理解、可调用、可验证、可预览、可撤销**。
+### 在第三方项目接入 Worldform
 
-## 2. 三级接口
+读取 `.agents/skills/worldform-adapter-development/SKILL.md` 和第三方接入文档。原则上只修改消费者项目，不修改 Worldform。
 
-### Level 1 — Markdown / Skill
+两类任务不可混为一谈。
 
-这是最基础、也必须长期稳定的入口。
+## 3. Level 1 — Markdown / Skill
 
-Agent 应先阅读：
+稳定入口包括：
 
 ```text
 AGENTS.md
 agent/README.md
 docs/ARCHITECTURE.md
 docs/PROJECT_ADAPTER.md
+docs/THIRD_PARTY_INTEGRATION.md
+.agents/skills/*
 ```
 
-目标：即使没有启动 Worldform，Agent 也能理解场景格式、Adapter 边界和开发约束。
+Skill 教 Agent 执行特定工作流，Markdown 文档解释协议与边界。
 
-### Level 2 — CLI
+## 4. Level 2 — CLI
 
-规划中的命令：
+规划首批命令：
 
 ```text
 worldform validate <scene>
-worldform adapter:check <adapter>
+worldform adapter check <adapter>
+worldform inspect <scene>
 worldform export <scene> --target <target>
-worldform director:validate <timeline>
 ```
 
-CLI 的主要用户不是普通玩家，而是：
+CLI 面向 Agent、CI、批处理脚本和 Adapter 开发者。CLI 必须调用 Workspace/Adapter Host，不复制验证或 Adapter lifecycle。
 
-- Codex / Claude Code；
-- CI；
-- 批处理脚本；
-- Adapter 开发者。
+## 5. Level 3 — MCP
 
-典型循环：
+MCP 用于操作正在运行中的 Workspace Session。
 
-```text
-Agent 写 Adapter
-      ↓
-worldform adapter:check
-      ↓
-失败
-      ↓
-Agent 修改
-      ↓
-检查通过
-```
-
-### Level 3 — MCP
-
-MCP 用于操作正在运行中的 Worldform 编辑会话。
-
-建议工具域：
+首批工具域：
 
 ```text
 scene.*
 project.*
-preview.*
 change.*
 history.*
-director.*
+preview.*
 ```
 
-首批目标工具：
+Mutation 必须返回或构造结构化 Patch / DraftChange。
+
+MCP 不拥有独立 Scene 状态，不直接改 Pascal store，不提供任意文件系统或任意代码执行。
+
+## 6. Revision / DraftChange
+
+所有 Agent mutation 都必须基于明确 revision：
 
 ```text
-scene.get
-scene.query
-scene.create
-scene.update
-scene.delete
-
-project.listCapabilities
-project.callCapability
-project.validate
-
-change.preview
-change.apply
-change.discard
-
-preview.play
-preview.stop
-
-history.undo
-history.redo
+Agent
+  ↓ read revision N
+产生 patches + baseRevision=N
+  ↓
+Workspace Validate
+  ↓
+DraftChange / Ghost Preview
+  ↓
+用户或调用方 Apply
 ```
 
-Director 成熟后增加：
+如果场景已经变为 revision N+1，不能把旧修改静默覆盖到新文档。
 
-```text
-director.get
-director.createCue
-director.updateCue
-director.deleteCue
-```
-
-## 3. Agent 修改必须结构化
-
-禁止：
-
-```text
-LLM -> 直接改 Three Object3D
-LLM -> 直接改 Pascal store 内部字段
-```
-
-正确：
-
-```text
-LLM / Agent
-    ↓
-Tool / Capability
-    ↓
-ScenePatch[]
-    ↓
-Core + Project Validation
-    ↓
-Ghost Preview
-    ↓
-Apply / Discard
-```
-
-这样可以统一：
-
-- 人工修改；
-- Agent 修改；
-- MCP 修改；
-- 项目能力生成结果；
-- Undo / Redo；
-- Diff / 审计。
-
-## 4. Ghost Preview
-
-参考 Aedifex 的成熟思路，但改为 Worldform 自己的 Patch 模型。
+## 7. Ghost Preview
 
 建议状态：
 
 ```text
-Draft Change
-├─ changeId
+DraftChange
+├─ id
 ├─ source
+├─ baseRevision
 ├─ patches[]
 ├─ validation
-└─ status
-   ├─ preview
-   ├─ applied
-   └─ discarded
+└─ status: preview | applied | discarded
 ```
 
-执行顺序：
+执行顺序：Patch → Core Validate → Adapter Validate → Preview → Apply/Discard → History。
 
-1. Agent 产生 Patch；
-2. Core 结构校验；
-3. Project Adapter 业务校验；
-4. 编辑器显示半透明/差异预览；
-5. 用户确认；
-6. Apply；
-7. 进入 History。
+## 8. Capability 调用
 
-## 5. Agent 不应该猜项目规则
+如果项目已经提供 `generate`、`validate`、`simulate` 等 capability，Agent 应调用 capability，而不是自己根据部分源码“模拟”项目算法。
 
-如果项目提供 capability：
+如果缺 capability，优先在项目 Adapter 中补充并运行契约测试。
 
-```text
-validateLevel
-generateLevel
-validatePlacement
-simulatePlacement
-```
+## 9. 当前阶段
 
-Agent 应调用 capability，而不是阅读部分代码后在提示词里“模拟”业务算法。
+现阶段已有 Markdown 入口、Core Patch/History 和 adapter-api 基线；CLI/MCP 仍是 contract-first 占位。
 
-如果缺少所需 capability，Agent 可以：
-
-1. 阅读 Project Adapter 文档；
-2. 阅读项目真实代码；
-3. 为 Adapter 增加 capability；
-4. 运行契约测试；
-5. 再通过 Worldform 调用。
-
-## 6. 运行中场景与仓库修改的区别
-
-外部 Agent 有两类工作：
-
-### 开发 Worldform / Adapter
-
-通过仓库文件 + CLI + 测试完成。
-
-### 编辑当前场景
-
-通过 MCP / Worldform Operations 完成。
-
-不要让 MCP 变成任意文件系统或任意代码执行通道；MCP 应专注 Worldform 能力。
-
-## 7. 安全与可恢复性
-
-MCP 正式实现时至少要求：
-
-- mutation 与 query 工具区分；
-- mutation 可审计；
-- 所有修改可落为 Patch；
-- destructive operation 有明确语义；
-- Apply 前能校验；
-- History 可撤销；
-- Project capability 返回错误不能静默吞掉。
-
-## 8. 第一阶段状态
-
-当前只实现：
-
-- Agent 文档入口；
-- Core Patch 契约；
-- Adapter capability 契约；
-- CLI/MCP package 边界与计划工具域。
-
-第一阶段不实现任何模型 API。
+P1-003 建立 Workspace 后，P1-006/P1-007 才正式实现 CLI/MCP。不要在 Workspace 之前让 MCP 成为新的应用层。

@@ -1,38 +1,42 @@
 # Agent Entry — Worldform / 万类
 
-如果你是 Codex、Claude Code 或其它代码智能体，请按顺序阅读：
+如果你是 Codex、Claude Code 或其它代码智能体，请先判断你正在做哪类工作。
+
+## A. 开发 Worldform 本身
+
+按顺序阅读：
 
 1. `../AGENTS.md`
-2. `../docs/ARCHITECTURE.md`
-3. `../docs/PROJECT_ADAPTER.md`
+2. `../docs/PRODUCT_DEFINITION.md`
+3. `../docs/ARCHITECTURE.md`
 4. `../docs/ROADMAP.md`
-5. 与当前任务相关的 `../docs/decisions/`
+5. 当前 `../docs/tasks/` 任务
+6. 相关 `../docs/decisions/`
+7. `../.agents/skills/worldform-development/SKILL.md`
 
-## 最重要的五条规则
+## B. 在独立项目中接入 Worldform
 
-1. 不在 Worldform Core 中复制游戏规则。
-2. 不把 Pascal/Three/Babylon/Unreal 内部对象当正式数据。
-3. 项目能力通过 Project Adapter 调用。
-4. 可持久化场景修改应落为 `ScenePatch[]`。
-5. Worldform 不内置 LLM；Agent 通过仓库、CLI、MCP 与之协作。
+阅读：
+
+1. `../docs/PROJECT_ADAPTER.md`
+2. `../docs/THIRD_PARTY_INTEGRATION.md`
+3. `../.agents/skills/worldform-adapter-development/SKILL.md`
+
+正式接入原则上只修改消费者项目，不修改 Worldform。
+
+## 最重要的规则
+
+1. SceneDocument 是权威数据。
+2. 项目业务规则不复制到 Worldform。
+3. 可持久化修改统一为 Patch。
+4. Editor / CLI / MCP 共用 Workspace / Session。
+5. Adapter API、SDK、Host 与 Transport 分层。
+6. Worldform 不内置 LLM。
+7. P1-009 前不进入 TWR / Place 正式 Adapter 开发。
 
 ## 当前阶段
 
-当前为 Phase 1 / Foundation。
-
-优先任务：
-
-```text
-SceneDocument
-Patch / Validation
-Project Adapter
-Pascal PoC
-TWR Adapter Spike
-Place & Seek Adapter Spike
-Agent docs
-```
-
-暂不要扩展完整 Director、MCP、材质/VFX/动画系统。
+当前为 Phase 1 / Platform Alpha。下一任务从 P1-002 开始：Core Contract Hardening → Workspace → Adapter SDK → 通用编辑器 → CLI/MCP → Clean-room。
 
 ## 常用检查
 
@@ -40,19 +44,7 @@ Agent docs
 pnpm install
 pnpm check
 pnpm test
+pnpm lint
 ```
 
-## 新建 Project Adapter
-
-开始前阅读 `../docs/PROJECT_ADAPTER.md`。
-
-先列出：
-
-- 哪些数据只是 Worldform 通用场景语义；
-- 哪些是项目独有组件；
-- 哪些规则必须调用项目真实代码；
-- 需要暴露哪些 capability；
-- 正式导出格式是什么；
-- Project Preview 在哪里运行。
-
-如果无法明确这些边界，不要先写大规模实现。
+如果任务要求接入某个具体游戏，但 P1-009 尚未通过，应先确认它是否只是测试 fixture；不要直接把游戏业务写进 Worldform。

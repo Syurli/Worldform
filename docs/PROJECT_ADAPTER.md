@@ -2,120 +2,79 @@
 
 ## 1. 目的
 
-Project Adapter 让 Worldform 使用项目自己的真实能力，而不是在编辑器里复制一份业务逻辑。
+Project Adapter 让 Worldform 调用项目自己的真实能力，而不是在编辑器里复制业务逻辑。
 
 ```text
-Worldform
-   │
-   ▼
+Worldform Workspace
+      ↓
+Adapter Host
+      ↓
 Project Adapter
-   │
-   ▼
+      ↓
 项目真实代码 / Runtime / 服务
 ```
 
-一个 Adapter 可以很薄。它的职责是“翻译和调用”，不是重新实现项目。
+一个 Adapter 应尽量薄：负责翻译、描述和调用，不负责重新实现项目。
 
-## 2. 第一阶段接口
+## 2. 三层职责
 
-接口位于：
+### `@worldform/adapter-api`
 
-```text
-packages/adapter-api/src/index.ts
-```
+最小稳定协议。定义 manifest、capability、validation、export 等公共类型。
 
-核心类型：
+### `@worldform/adapter-sdk`
 
-- `ProjectAdapterManifest`
-- `ProjectCapabilityDescriptor`
-- `ProjectCapabilityRequest`
-- `ProjectCapabilityResult`
-- `ProjectExportTarget`
-- `WorldformProjectAdapter`
+面向第三方开发者的便利层，规划提供 schema/descriptor helper、fixture、contract test、模板、诊断和后续脚手架。
 
-## 3. Capability
+### Adapter Host
 
-Capability 表示项目愿意暴露给 Worldform 的真实能力。
+属于 Worldform Workspace，负责加载、生命周期、timeout/cancellation、transport、capability dispatch 与错误归一化。
 
-典型类型：
+不要把 stdio / HTTP / IPC 细节直接写进业务 Adapter 类型。
 
-```text
-generate
-validate
-simulate
-query
-compile
-```
+## 3. 版本规则
+
+正式 Adapter 必须区分：
+
+- `adapterApiVersion`：协议兼容版本；
+- `sceneSchemaVersion`：该项目的场景语义版本；
+- `version`：Adapter 实现自身版本；
+- Worldform 文档格式版本由 Core 单独管理。
+
+不能用一个 `schemaVersion` 同时承担多个含义。
+
+## 4. Capability
+
+Capability 表示项目愿意暴露给 Worldform 的真实能力，典型类型包括 generate / validate / simulate / query / compile。
 
 Capability 可以返回：
 
-- 普通结果 `output`；
+- 普通结构化 output；
 - 建议的 `ScenePatch[]`；
-- `ValidationResult`；
-- 面向用户或 Agent 的消息。
+- ValidationResult；
+- 诊断消息。
 
-### 为什么允许返回 Patch
+如果 Capability 产生场景修改，应进入 Workspace DraftChange，而不是直接修改当前文档。
 
-例如外部 Agent 请求：
+## 5. Node / Component / Property 描述
 
-> 给当前仓库增加一条侧翼路线。
+Core 的 `SceneNode.components` 是通用容器，业务 schema 与编辑方式由 Adapter 声明。
 
-正确流程可以是：
+P1-004 将建立 descriptor/schema 边界，使 Editor 不需要预先知道项目节点：
 
 ```text
-Agent
-  ↓
-project.callCapability("suggestFlankRoute")
-  ↓
-项目真实逻辑
-  ↓
-ScenePatch[]
-  ↓
-Worldform Ghost Preview
-  ↓
-Validate
-  ↓
-Apply / Discard
+Adapter 注册未知 Node/Component
+        ↓
+Editor 读取 descriptor/schema
+        ↓
+动态 Scene Tree / Inspector
+        ↓
+ScenePatch
 ```
 
-这样 Agent 和项目逻辑都不需要直接修改 Three/Pascal 场景。
+这项能力先由通用 Example Adapter 验证，禁止直接拿 TWR/Place 作为唯一设计来源。
 
-## 4. Schema 与 Component
-
-Worldform Core 的 `SceneNode.components` 是通用容器。
-
-例如战术巫师可以定义：
-
-```json
-{
-  "components": {
-    "twr.connector": {},
-    "twr.enemyAnchor": {},
-    "twr.lootAnchor": {}
-  }
-}
-```
-
-《物有所归》可以定义：
-
-```json
-{
-  "components": {
-    "place.interaction": {},
-    "place.placement": {},
-    "place.secret": {},
-    "place.physicsProfile": {}
-  }
-}
-```
-
-这些 key 的 schema、编辑方式和业务校验由 Adapter 提供；Core 只保证文档结构。
-
-第一阶段先保持接口简单，后续再补 `registerComponentSchema()` 一类注册 API。
-
-## 5. Validator 分层
-
-建议验证顺序：
+## 6. Validator 分层
 
 ```text
 Core structural validation
@@ -127,132 +86,55 @@ Project business validation
 Bridge/runtime validation（如需要）
 ```
 
-所有问题统一转换成 Worldform `ValidationIssue`，并标记来源。
+所有结果统一归一为 Worldform ValidationIssue，并保留来源。
 
-## 6. Exporter
+## 7. Exporter / Preview
 
-Exporter 负责从 Worldform 场景语义转换为项目正式格式。
+Exporter 从 Worldform 场景语义转换为项目正式格式，不允许把 Pascal/Three 内部序列化结果当项目格式。
 
-例如：
+Project Preview 由项目真实环境负责；Authoring Preview 与 Project Preview 分离。
 
-```text
-TWR Adapter
-Worldform SceneDocument
-→ LevelModuleDefinition / FixedLevelDefinition
-```
+## 8. Transport
 
-```text
-Place Adapter
-Worldform SceneDocument
-→ *.place.json
-```
+Adapter 的业务契约不绑定进程模型。Host 可逐步支持：
 
-不要把 Pascal/Three 的场景序列化结果作为正式项目格式。
+- in-process TypeScript；
+- stdio 本地进程；
+- local HTTP / IPC；
+- 引擎 Bridge。
 
-## 7. Preview
+Transport 只解决“怎么连接”，不改变 Capability 语义。
 
-后续 Project Preview 应通过 Adapter / Bridge 启动项目自己的预览环境。
+## 9. 第三方项目的正确接入位置
 
-作者视图与运行预览分开：
+正式 Adapter 默认应位于消费者项目仓库，而不是 Worldform 仓库：
 
 ```text
-Pascal / Three
-= Authoring Preview
-
-Babylon / Unreal / 项目 Runtime
-= Project Preview
+YourGame/
+├─ src/...
+├─ tools/worldform/ 或 plugins/worldform/
+│  ├─ adapter
+│  ├─ schemas
+│  ├─ tests
+│  └─ README.md
+└─ ...
 ```
 
-## 8. 战术巫师适配建议
+开发者或 Codex 应只依赖 Worldform 的 SDK/Skill/CLI/MCP。若不得不修改 Worldform 才能接入，应把它记录为平台缺口，而不是把项目代码偷偷搬进 Core。
 
-Worldform 侧负责编辑：
+## 10. Adapter 验收清单
 
-- WFC Module 外形；
-- Connector；
-- Walk Surface；
-- Obstacle；
-- Enemy / Loot Anchor；
-- Extraction；
-- Key Node；
-- 固定关卡结构。
+至少要求：
 
-项目侧保留：
+- 唯一 Adapter ID；
+- 明确 API / project schema / implementation 版本；
+- 节点/组件 descriptor；
+- Validator；
+- Capability 列表及输入输出 schema；
+- Export target（如需要）；
+- 契约测试；
+- 明确项目真实规则所有权；
+- 不依赖 Pascal/Three 内部持久化；
+- 能在不修改 Worldform 的情况下加载和验证。
 
-- TC-WFC；
-- Mission Topology；
-- Portal Graph；
-- Navigation；
-- Seed / Retry / Fallback；
-- Runtime 构建。
-
-推荐 Capability：
-
-```text
-validateModule
-generateLevel
-validateLevel
-validateSeedBatch
-inspectPortalGraph
-inspectNavigationGraph
-exportDefinition
-```
-
-## 9. 物有所归适配建议
-
-Worldform 侧负责编辑：
-
-- PlaceObject；
-- Zone；
-- Container；
-- Placement Target；
-- Secret / Memory；
-- Physics Profile 引用；
-- Camera / 展示辅助。
-
-项目侧保留：
-
-- 真实 Placement 判定；
-- Physical Snap；
-- Jolt 模拟规则；
-- Discover / Secret / Completion；
-- Settled State 判定。
-
-推荐 Capability：
-
-```text
-validatePlacement
-simulatePlacement
-evaluateSettledState
-validatePlace
-exportPlace
-```
-
-## 10. 成熟引擎项目
-
-Unreal / Unity / Godot Adapter 不应尝试导入全部引擎对象。
-
-第一轮只定义 Worldform 真正拥有的数据：
-
-- Transform；
-- 白盒；
-- Zone；
-- Anchor；
-- Marker；
-- Camera；
-- 基础 Gameplay Metadata。
-
-再由引擎端 Bridge 创建对应 Actor / Volume / Camera / Marker。
-
-## 11. Adapter 验收清单
-
-一个新的 Adapter 至少需要：
-
-- [ ] 唯一 `manifest.id`；
-- [ ] 文档 schemaVersion；
-- [ ] 最少一个 Validator；
-- [ ] Capability 列表；
-- [ ] Capability 输入输出说明；
-- [ ] Export target；
-- [ ] 契约测试；
-- [ ] 明确哪些能力仍由项目真实代码负责；
-- [ ] 不依赖 Pascal/Three 内部序列化作为正式格式。
+完整外部接入流程见 `THIRD_PARTY_INTEGRATION.md`。

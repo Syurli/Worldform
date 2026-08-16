@@ -1,51 +1,41 @@
 # Worldform 架构基线
 
-> 状态：Phase 1 / Foundation
+> 状态：Phase 1 / Platform Alpha
 
 ## 1. 目标
 
-Worldform（万类）是一套通用场景与空间内容编辑框架。
-
-它负责：
-
-- 描述场景；
-- 编辑空间与对象；
-- 记录结构化修改；
-- 调用项目真实能力；
-- 验证与预览；
-- 将结果交给项目 Runtime 或成熟引擎。
-
-它不负责成为完整游戏引擎，也不复制项目业务系统。
+Worldform 的首要架构目标不是尽快做出某一款游戏的编辑器，而是先形成稳定、可测试、可由独立项目消费的场景平台协议。
 
 ## 2. 分层
 
 ```text
-                    Worldform
-                       │
-        ┌──────────────┼──────────────┐
-        ▼              ▼              ▼
-      Core          Editor Host     Director
-        │              │              │
- SceneDocument      Pascal/Three   Timeline
- Operations         2D / 3D        Camera
- Patch              Inspector      Actor/Object
- Validation         Asset Browser  Event/Marker
-        │              │              │
-        └───────┬──────┴──────┬───────┘
-                ▼             ▼
-          Project Adapter   Agent Interface
-                │             │
-       Capability/Validator  Markdown
-       Export/Preview        CLI / MCP
-                │             │
-                └──────┬──────┘
-                       ▼
-                     Bridge
-                       │
-       ┌───────────────┼───────────────┐
-       ▼               ▼               ▼
-     Web Runtime      Unreal       Unity/Godot
+                  Editor Host
+                      │
+             CLI ─────┼───── MCP
+                      │
+                      ▼
+             Workspace / Session
+       ┌──────────────┼──────────────┐
+       ▼              ▼              ▼
+     Core        Adapter Host      Preview
+       │              │
+       │              ├─ lifecycle
+       │              ├─ transport
+       │              └─ capability dispatch
+       │                      │
+       ▼                      ▼
+ SceneDocument          Project Adapter
+ Patch / History               │
+ Validation                    ▼
+ Migration                项目真实代码
+ Resource / Reference
+                      │
+                      ▼
+                Authoring Layer
+                Pascal / Three
 ```
+
+Director 与成熟引擎 Bridge 在后续阶段接入 Workspace，不绕过应用层直接修改 Core 状态。
 
 ## 3. 权威数据
 
@@ -53,267 +43,187 @@ Worldform（万类）是一套通用场景与空间内容编辑框架。
 
 Worldform 的权威场景数据是 `SceneDocument`，不是渲染器对象。
 
-第一阶段采用扁平节点结构：
+当前核心包含文档 ID、schemaVersion、projectAdapterId、扁平节点、rootNodeIds、资源、引用和 metadata。
 
-```text
-SceneDocument
-├─ id
-├─ schemaVersion
-├─ projectAdapterId
-├─ rootNodeIds[]
-└─ nodes{}
-   └─ SceneNode
-      ├─ id
-      ├─ type
-      ├─ parentId
-      ├─ transform
-      ├─ components
-      ├─ tags
-      └─ metadata
-```
+`components` 是扩展容器。Core 不解释 `wfcConnector`、`placementRule` 等业务语义；具体 schema 与行为由项目 Adapter 提供。
 
-`components` 是扩展容器。Core 不解释诸如 `wfcConnector`、`lootAnchor`、`placementRule` 的业务语义，具体 schema 与行为由项目 Adapter 提供。
+### 3.2 非权威对象
 
-### 3.2 不允许成为权威数据的对象
-
-以下对象只能是投影或 Runtime 表现：
-
-- Three.js `Object3D`
-- Pascal Scene Store
-- Babylon.js Node / Mesh
-- Jolt Body
-- Unreal Actor
-- Unity GameObject
+以下只能是投影或 Runtime 表现：Pascal Store、Three Object3D、Babylon Node/Mesh、Jolt Body、Unreal Actor、Unity GameObject。
 
 它们必须可以从正式场景数据重新构建。
 
-## 4. Scene Operations 与 Patch
+## 4. Scene Patch 与 History
 
-所有可持久化修改最终都应该被表达为结构化 Patch：
+所有可持久化修改必须统一落为结构化 Patch。当前 Core 已实现 create/update/delete、逆 Patch、History、稳定序列化和 Migration。
+
+后续人工编辑、Capability、CLI、MCP、Ghost Preview 不得各自维护独立 mutation 格式。
+
+## 5. Workspace / Session
+
+`packages/workspace` 是下一阶段必须补上的统一应用层。
+
+它至少负责：
+
+- 当前 SceneDocument；
+- document revision；
+- SceneHistory；
+- DraftChange；
+- Core + Adapter 验证管线；
+- Apply / Discard；
+- Adapter Host 会话；
+- 变更事件 / 只读快照；
+- 后续 Preview 状态。
+
+Editor、CLI、MCP 都调用 Workspace，不直接各自组织 Core + Adapter。
+
+推荐基本对象：
 
 ```text
-create(node)
-update(id, changes)
-delete(id, cascade)
+WorldformWorkspace
+├─ document
+├─ revision
+├─ history
+├─ adapterSession
+├─ draftChanges
+├─ validate()
+├─ previewChange()
+├─ applyChange()
+├─ discardChange()
+├─ undo()
+└─ redo()
 ```
 
-第一阶段 `@worldform/core` 已提供最小纯函数 Patch 执行器。
+## 6. Revision 与 DraftChange
 
-后续能力都应尽量建立在它之上：
+运行中场景需要显式 revision。
+
+建议 DraftChange 基线：
 
 ```text
-人工编辑
-   │
-外部 Agent
-   │
-MCP
-   │
-Project Capability
-   │
-   ▼
-ScenePatch[]
-   │
-   ├─ Validate
-   ├─ Ghost Preview
-   ├─ Apply / Discard
-   ├─ Undo / Redo
-   └─ Diff / History
+DraftChange
+├─ id
+├─ source
+├─ baseRevision
+├─ patches[]
+├─ validation
+└─ status
+   ├─ preview
+   ├─ applied
+   └─ discarded
 ```
 
-禁止为 AI、MCP、Gizmo 各自维护互不兼容的修改通路。
+当 `baseRevision` 与当前 revision 不一致时，不允许静默 Apply；必须拒绝、重算或进入明确的冲突处理流程。
 
-## 5. Project Adapter
+## 7. 版本必须分层
 
-Project Adapter 是 Worldform 最关键的扩展边界。
+不要继续把所有版本都叫 `schemaVersion`。正式协议至少区分：
 
-最小职责：
+1. **Document format version**：Worldform 通用文档格式；
+2. **Adapter API version**：Worldform 与 Adapter 的协议兼容版本；
+3. **Project scene schema version**：项目组件/节点语义版本；
+4. **Adapter implementation version**：某个 Adapter 包自身版本。
 
-```text
-manifest
-listCapabilities()
-validateDocument()
-callCapability()
-listExportTargets()
-exportDocument()
-```
+P1-002 负责收口命名、兼容规则与迁移边界。
 
-项目能力可以来自：
+## 8. Project Adapter：API、SDK、Host 分离
 
-- 项目自己的共享 TypeScript package；
-- 本地进程；
-- HTTP 服务；
-- 引擎插件 Bridge；
-- 其它稳定 IPC。
+### adapter-api
 
-Worldform 只调用，不复制算法。
+最小而稳定，只定义 Adapter 与 Worldform 的协议类型。
 
-### 示例：《战术巫师》
+### adapter-sdk
 
-Worldform Adapter 可暴露：
+面向第三方开发者，提供：
 
-```text
-generateWfcLevel
-validateLevel
-validateNavigation
-validateSeedBatch
-inspectPortalGraph
-exportResolvedLevel
-```
+- descriptor/schema 辅助；
+- 测试 fixture；
+- contract test；
+- Adapter 模板；
+- 错误与诊断辅助；
+- 后续脚手架。
 
-但 TC-WFC / Mission Topology / Portal / Navigation 实现仍留在游戏项目。
+### Adapter Host
 
-### 示例：《物有所归》
+属于 Workspace/Application 侧，负责：
 
-可暴露：
+- 加载；
+- 生命周期；
+- timeout / cancellation；
+- capability dispatch；
+- Transport；
+- 错误归一化。
 
-```text
-validatePlacement
-simulatePlacement
-evaluateSettledState
-validateSecrets
-exportPlace
-```
+Adapter 负责“提供什么能力”，Host 负责“如何连接并调用”。
 
-实际归位、物理与完成规则仍留在游戏项目。
+Transport 可以逐步支持 in-process、stdio、本地 HTTP/IPC；不要把 Transport 细节写死进项目业务接口。
 
-## 6. Pascal 接入
+## 9. Pascal 接入
 
-Pascal 是 Authoring Layer，不是 Worldform Core。
-
-推荐关系：
+Pascal 是 Authoring Layer，不是 Core，也不拥有 Workspace 状态。
 
 ```text
-Worldform SceneDocument
+Workspace SceneDocument
         │
         ▼
 @worldform/pascal-adapter
         │
         ▼
-Pascal Core / Viewer / Editor
+Pascal Authoring View
         │
         ▼
-作者视图
+用户编辑
+        │
+        ▼
+ScenePatch[]
+        │
+        ▼
+Workspace
 ```
 
-反向编辑应转换为 `ScenePatch[]` 后再进入 Worldform 正式文档。
+Pascal PoC 必须使用通用 Example Adapter，不依赖 TWR / Place 语义，以证明未知项目节点可以通过 descriptor/schema 被编辑器呈现。
 
-第一阶段不直接引入 `@pascal-app/*`，先验证：
-
-1. 自定义节点；
-2. Transform / Gizmo；
-3. 2D/3D 投影；
-4. Selection；
-5. Undo/Redo 与 Worldform Patch 的边界；
-6. 自定义 Inspector；
-7. Connector / Anchor 等游戏节点；
-8. 导入 / 导出一份真实样板间。
-
-PoC 通过后，在 `packages/pascal-adapter` 锁定明确的上游版本或 commit。
-
-## 7. Aedifex 借鉴范围
-
-Aedifex 最值得借鉴的是：
-
-```text
-结构化操作
-  ↓
-本地校验
-  ↓
-Ghost Preview
-  ↓
-用户确认
-  ↓
-Apply
-```
-
-Worldform 不复制它的建筑领域提示词和内置聊天系统。
-
-Worldform 的 Agent 操作应最终调用自身 Operations / Project Capability，并保持模型供应商无关。
-
-## 8. Agent Interface
-
-Worldform 自己不提供 LLM。
+## 10. Agent Interface
 
 三级入口：
 
-1. **Markdown / Skill**：让 Agent 理解项目与扩展方式；
-2. **CLI**：让 Agent 能在无 UI 环境验证、导出、检查 Adapter；
-3. **MCP**：让 Agent 操作正在运行的 Worldform 会话。
+1. Skill / Markdown：理解协议和接入流程；
+2. CLI：无 UI 验证、检查、导出；
+3. MCP：操作正在运行的 Workspace Session。
 
-对话发生在用户选择的 Codex / Claude Code / 其它 Agent 中。
+MCP 只是 Workspace 的一个外部入口，不能成为新的状态权威或任意代码执行通道。
 
-## 9. 预览分层
-
-必须区分：
+## 11. 预览分层
 
 ### Authoring Preview
 
-用于编辑器快速反馈，当前计划基于 Pascal + Three.js/WebGPU。
+快速编辑反馈，当前计划基于 Pascal + Three.js/WebGPU。
 
 ### Project Preview
 
-使用项目自己的正式环境：
+由项目自己的正式环境提供。Worldform 不重新实现游戏渲染、物理、导航或生成算法。
 
-- 战术巫师：Babylon / Jolt / Voxel 路线；
-- 物有所归：Babylon / Jolt；
-- Unreal 项目：Unreal Preview / PIE / 专用 Bridge。
+## 12. Bridge / Director
 
-Worldform 不为了像素级一致而重新实现每个项目的渲染器。
+Bridge 只同步 Worldform 负责的 Transform、白盒、Camera、Zone、Anchor、Marker、Gameplay Metadata 等，不追求成熟引擎全场景无损双向同步。
 
-## 10. Director 边界
+Director 后续通过 Workspace 进入统一 Patch / Validation / History 管线。
 
-Director 是轻量导演台，不是完整 Sequencer。
-
-第一阶段只锁定五类语义：
-
-- Camera
-- Actor
-- Object
-- Event
-- Marker
-
-未来 Web 项目可直接运行 Timeline JSON；成熟引擎则通过 Bridge 转换为基础 Camera / Marker / Sequence 内容后进入正式引擎精修。
-
-## 11. Bridge 边界
-
-Bridge 只同步 Worldform 负责的数据，例如：
-
-- Transform
-- 白盒
-- Camera
-- Zone
-- Anchor
-- Marker
-- Gameplay Metadata
-
-不追求无损双向同步：
-
-- Nanite
-- Niagara
-- Landscape
-- 复杂 Blueprint
-- 完整 Sequencer
-- World Partition
-- 项目专属高级材质
-
-## 12. Core 晋升规则
+## 13. Core 晋升规则
 
 新增功能进入 Core 前必须回答：
 
-> 是否至少两个真实项目都需要它？
+> 是否至少两个真实项目都需要它，而且它无法合理留在 Workspace、Adapter SDK 或 Adapter 中？
 
-典型 Core：Transform、Scene Tree、Patch、Undo/Redo、Schema、Diff、Validation Result、基础 Timeline。
+## 14. Phase 1 完成定义
 
-典型 Adapter：WFC、敌人刷新、归位规则、体素破坏、任务系统、某项目导航算法。
+Platform Alpha 完成时应满足：
 
-## 13. 第一阶段完成定义
-
-Phase 1 完成时应满足：
-
-- Core 可独立 typecheck/test；
-- SceneDocument 与 Patch 有基础测试；
-- Adapter API 可被独立项目实现；
-- Pascal 接入只经过隔离层；
-- 两个真实项目各有一个最小 Adapter 验证样例；
-- Agent 能从仓库文档理解如何新增 Adapter；
-- 不需要启动任何 LLM 即可完成上述验证。
+- Core 契约、版本和 revision 边界清晰；
+- Workspace 统一 Editor/CLI/MCP 的状态与 mutation 管线；
+- Adapter API / SDK / Host 分工明确且有契约测试；
+- Pascal 作者视图只经隔离层工作；
+- CLI 与 MCP 可用；
+- Skill 与第三方文档可用；
+- Clean-room 独立仓库能在不修改 Worldform 的情况下实现 Adapter；
+- 之后才开始 TWR / Place 外部接入。

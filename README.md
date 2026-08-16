@@ -6,95 +6,97 @@
 
 万类不是游戏引擎，也不试图重新实现 Unity / Unreal。它提供一套轻量、开放、结构化的场景工作环境，让人工或外部智能体能够设计空间、布置对象、编辑白盒、调用项目真实规则进行验证，并将结果交给对应游戏或正式引擎。
 
-## 核心定位
+## 当前开发策略
+
+Worldform 从第一天按照“第三方可接入的平台”开发，而不是先内嵌某一款游戏再反向抽象。
+
+当前目标是 **Platform Alpha / Third-party Ready**：
 
 ```text
-人 / 外部 Agent
-      │
-      ▼
- Worldform Editor
-      │
-      ├─ SceneDocument / Operations / Undo / Diff
-      ├─ 3D / 2D Authoring
-      ├─ Project Adapter
-      ├─ Validation / Preview
-      ├─ Director（后续阶段）
-      └─ CLI / MCP（后续阶段）
-      │
-      ▼
-项目自己的真实能力
-      │
-      ├─ Web Runtime
-      ├─ Unreal
-      ├─ Unity / Godot
-      └─ 自研运行时
+Core
+  ↓
+Workspace / Session
+  ↓
+Adapter SDK + Adapter Host
+  ↓
+Editor / CLI / MCP
+  ↓
+第三方项目按正式流程接入
 ```
 
-### 长期原则
+《战术巫师：裂隙突围》和《物有所归 / Place & Seek》仍是首批真实验收项目，但它们在 Phase 1 平台门槛完成后，作为独立第三方项目接入，不进入当前 Worldform 核心开发流程。
 
-1. **万类不拥有项目业务规则。** WFC、物理放置、导航、任务等规则始终来源于对应项目代码库。
-2. **万类不绑定大语言模型。** 不维护聊天窗口、模型供应商、API Key、模型路由或对话历史；外部 Agent 通过文档、CLI、MCP 使用万类。
-3. **编辑数据与运行时解耦。** Three.js / Babylon.js / Unreal Actor 都不是场景语义的权威数据。
-4. **至少两个真实项目都需要的能力，才考虑进入 Core。** 游戏专属能力进入 Project Adapter。
-5. **Authoring Preview 与 Project Preview 分离。** 编辑器追求快速可靠，正式效果由项目自己的运行环境负责。
+## 不可破坏的原则
 
-## 第一批真实项目
+1. **SceneDocument 是权威数据。** Pascal / Three / Babylon / Unreal 对象都只是投影或 Runtime 表现。
+2. **所有持久化修改统一落为结构化 Patch。** 人工编辑、CLI、MCP、项目能力不得维护互不兼容的修改通路。
+3. **Editor、CLI、MCP 共用 Workspace / Session 应用层。** 不分别实现加载、验证、Apply、Undo、Adapter 调用。
+4. **项目业务规则留在项目仓库。** WFC、物理放置、导航、任务等只通过 Project Adapter 调用。
+5. **Worldform 不绑定大语言模型。** 外部 Agent 通过 Skill、CLI、MCP 使用万类。
+6. **至少两个真实项目都需要的能力，才优先进入 Core。**
 
-### 《战术巫师：裂隙突围》
+## 目标架构
 
-验证“大空间 + 程序生成”工作流：WFC 样板间、Connector、Walk Surface、Obstacle、Enemy/Loot Anchor、固定关卡、Seed/QA/Batch 等。TC-WFC、Mission Topology、Portal、Navigation、Validator 仍由游戏项目提供。
-
-### 《物有所归 / Place & Seek》
-
-验证“小空间 + 高密度互动”工作流：家具、小物件、容器、整理区域、秘密、回忆物、物理属性与互动对象。放置合法性、物理模拟、归位判定和完成条件仍由游戏项目提供。
-
-## 技术起点
-
-- **Pascal Editor**：作为通用场景编辑、参数化对象、2D/3D 视图和工具体系的重要技术参考与接入候选。
-- **Aedifex**：重点参考其“结构化操作 → 校验 → Ghost Preview → 确认 → Apply”的智能体编辑闭环。
-- **Worldform Core**：长期真正需要独立沉淀的部分，包括 `SceneDocument + Operations + Adapter + Bridge + Director + CLI/MCP/Skill`。
-
-> 万类不会简单 Fork Pascal 或 Aedifex 后改名。上游项目是技术起点与参考，Worldform 的项目协议、场景语义和跨项目适配能力保持独立。
+```text
+                  Editor
+                    │
+             CLI ───┼─── MCP
+                    │
+                    ▼
+           Worldform Workspace
+             / Session Layer
+                    │
+       ┌────────────┼────────────┐
+       ▼            ▼            ▼
+      Core      Adapter Host   Preview
+       │            │
+ SceneDocument      ▼
+ Patch/History   Project Adapter
+ Validation         │
+ Migration          ▼
+                项目真实代码
+```
 
 ## 仓库结构
 
 ```text
 Worldform/
 ├─ apps/
-│  └─ editor/                 # 独立 Web 编辑器宿主（第一阶段占位骨架）
+│  └─ editor/                    # Web 作者工具宿主
 ├─ packages/
-│  ├─ core/                   # SceneDocument / Operations / Patch / Validation
-│  ├─ adapter-api/            # 项目适配协议
-│  ├─ pascal-adapter/         # Pascal 接入边界（第一阶段只定义边界）
-│  ├─ cli/                    # Agent / CI 可调用命令行（后续实现）
-│  ├─ mcp/                    # 操作运行中编辑器（后续实现）
-│  └─ director/               # 轻量导演台（后续阶段）
+│  ├─ core/                      # 权威场景数据、Patch、History、Migration、Validation
+│  ├─ workspace/                 # 规划中的统一应用层 / Session
+│  ├─ adapter-api/               # 最小稳定适配协议
+│  ├─ adapter-sdk/               # 规划中的第三方开发 SDK / 契约测试工具
+│  ├─ pascal-adapter/            # Pascal 作者视图隔离层
+│  ├─ cli/                       # Agent / CI 命令行
+│  ├─ mcp/                       # 运行中编辑会话的 MCP 入口
+│  └─ director/                  # 后续轻量导演台
 ├─ examples/
-│  ├─ tactical-wizard/        # 战术巫师适配样例占位
-│  └─ place-and-seek/         # 物有所归适配样例占位
-├─ docs/
-│  ├─ ARCHITECTURE.md
-│  ├─ ROADMAP.md
-│  ├─ PROJECT_ADAPTER.md
-│  ├─ AGENT_INTERFACE.md
-│  └─ decisions/
-├─ agent/                     # 给外部 Agent 阅读的稳定入口
-└─ AGENTS.md                  # Codex / Agent 开发约束
+│  ├─ example-adapter/           # 通用、无游戏业务的适配样例
+│  ├─ tactical-wizard/           # Phase 2 验收参考占位
+│  └─ place-and-seek/            # Phase 2 验收参考占位
+├─ .agents/skills/               # 仓库级 Agent Skills
+├─ agent/                        # 外部 Agent 稳定阅读入口
+└─ docs/
+   ├─ ARCHITECTURE.md
+   ├─ ROADMAP.md
+   ├─ PROJECT_ADAPTER.md
+   ├─ THIRD_PARTY_INTEGRATION.md
+   ├─ AGENT_INTERFACE.md
+   ├─ decisions/
+   └─ tasks/
 ```
 
-## 当前阶段：Phase 1 — Foundation
+`packages/workspace`、`packages/adapter-sdk` 当前先建立职责边界文档；实际 package 实现分别由 P1-003、P1-004 完成，避免在路线校准提交中提前固化错误 API。
 
-第一阶段只建立“正确的骨架”，不急于扩展完整产品功能：
+## 当前阶段
 
-- 建立 TypeScript monorepo 与包边界；
-- 定义最小 `SceneDocument`、节点、Transform、Patch 与操作接口；
-- 定义 Project Adapter 最小协议；
-- 建立 Pascal 接入隔离层；
-- 建立两个真实项目的适配占位与契约测试方向；
-- 建立 Agent 文档入口；
-- 为后续 CLI、MCP、Ghost Preview 和 Director 保留稳定边界。
+Phase 1 的完成标准不是“已经支持两款游戏”，而是：
 
-详见 [`docs/ROADMAP.md`](docs/ROADMAP.md) 与 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
+> 一个不修改 Worldform 源码的独立项目，能够只依赖正式文档、SDK、Skill、CLI 与 MCP，由开发者或 Codex 完成 Adapter，并通过契约测试与 Clean-room 验收。
+
+当前执行顺序见 [`docs/tasks/README.md`](docs/tasks/README.md)。完整路线见 [`docs/ROADMAP.md`](docs/ROADMAP.md)。
 
 ## 开发
 
@@ -104,8 +106,8 @@ pnpm check
 pnpm test
 ```
 
-当前仓库处于基础搭建阶段。第一阶段原则上不引入具体游戏 Runtime，也不在 Core 中依赖 Three.js、Babylon.js、React、Jolt 或任何游戏业务代码。
+当前 Core 基线已经具备 SceneDocument、Patch/Inverse Patch、History、稳定序列化、Migration 与结构校验。下一步优先收口协议和统一应用层，不直接进入任何游戏 Adapter。
 
 ## 许可说明
 
-Worldform 自身的最终开源许可尚待单独确认。Pascal Editor 与 Aedifex 为独立上游项目；任何后续代码复用、分发与归属均必须保留对应上游许可与归属信息。
+Worldform 自身最终开源许可尚待单独确认。Pascal Editor 与 Aedifex 为独立上游项目；任何后续代码复用、分发与归属均必须保留对应上游许可与归属信息。

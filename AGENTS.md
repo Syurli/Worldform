@@ -4,132 +4,150 @@
 
 ## 1. 项目定义
 
-万类是“通用场景与空间内容编辑框架”，不是游戏引擎，也不是某一款游戏的编辑器 Fork。
+万类是“通用场景与空间内容编辑框架”，不是游戏引擎，也不是某一款游戏的专用编辑器 Fork。
 
 长期核心资产：
 
-- SceneDocument
-- Scene Operations / Patch / Undo / Diff
-- Project Adapter
-- Bridge
+- SceneDocument / Resource / Reference
+- Scene Operations / Patch / History / Diff
+- Workspace / Session
+- Project Adapter API / SDK / Host
+- Authoring Layer / Preview / Bridge
 - Director
 - CLI / MCP / Agent Skill
 
-Pascal Editor 是当前重要的编辑器技术起点；Aedifex 是 Agent 操作闭环的重要参考。两者都不是 Worldform 的业务权威。
+Pascal Editor 是当前重要的作者工具技术起点；Aedifex 是结构化 Agent 操作闭环的重要参考。两者都不是 Worldform 的业务权威。
 
-## 2. 不可破坏的边界
+## 2. 当前阶段：Platform Alpha / Third-party Ready
 
-### Core 禁止依赖
+当前不是《战术巫师》或《物有所归》的接入阶段。
 
-`packages/core` 不得依赖：
+执行顺序以 `docs/tasks/README.md` 为准：
 
-- React / Next.js
-- Three.js / React Three Fiber
-- Babylon.js
-- Jolt / 任意物理引擎
-- Pascal / Aedifex
-- Unreal / Unity / Godot SDK
-- 《战术巫师》或《物有所归》的业务代码
+1. P1-001 Core History / Serialization（已完成）
+2. P1-002 Core Contract Hardening
+3. P1-003 Workspace / Session
+4. P1-004 Adapter SDK + Example Adapter
+5. P1-005 Pascal Authoring Alpha
+6. P1-006 CLI
+7. P1-007 MCP + Ghost Preview
+8. P1-008 Third-party Developer Kit
+9. P1-009 Clean-room Validation
 
-Core 只能描述通用场景语义、操作与验证结果。
+在 P1-009 通过前，不要直接实现 TWR / Place 的正式 Adapter，也不要为了它们向 Core 塞入项目专属语义。
 
-### 项目规则禁止复制
+## 3. 不可破坏的边界
 
-不要在 Worldform 中重写项目真实规则。
+### 3.1 Core 禁止依赖
 
-错误：
+`packages/core` 不得依赖：React/Next、Three/Babylon、Jolt、Pascal/Aedifex、Unreal/Unity/Godot SDK 或任何具体游戏代码。
+
+Core 只能描述通用场景数据、Patch、History、Migration、结构验证与必要的通用协议。
+
+### 3.2 Workspace 是唯一应用层
+
+Editor、CLI、MCP 不得各自实现一套：
+
+- 文档加载与 revision；
+- History；
+- DraftChange；
+- Validate / Apply / Discard；
+- Adapter lifecycle / capability 调用；
+- 变更事件。
+
+这些能力应收敛到 `packages/workspace`。
+
+### 3.3 项目规则禁止复制
+
+正确关系：
 
 ```text
-Worldform 内重新实现 TWR WFC
-Worldform 内重新实现 Place & Seek 的归位算法
+Worldform Workspace
+      ↓
+Adapter Host
+      ↓
+Project Adapter
+      ↓
+项目真实 capability
 ```
 
-正确：
+例如 generate / validate / simulate / query / compile。Worldform 不重写业务算法。
 
-```text
-Worldform -> Project Adapter -> 项目真实 capability
-```
+### 3.4 渲染状态不是权威数据
 
-例如：
+不得把 Pascal store、Three Object3D、Babylon Node、Unreal Actor 序列化结果当正式 SceneDocument。正式内容必须能在没有 UI 与渲染器时读取、校验和迁移。
 
-```text
-generate()
-validate()
-simulate()
-query()
-compile()
-```
+## 4. 数据与并发原则
 
-### 渲染状态不是权威数据
+正式实现时必须区分：
 
-不得把 Three Object3D、Babylon Node、Unreal Actor 序列化结果作为正式 SceneDocument。
+- Worldform document format version；
+- Adapter API version；
+- Project scene schema version；
+- Adapter implementation version。
 
-正式场景内容必须能在没有渲染器时读取、校验和迁移。
+运行中场景必须有 revision。所有 DraftChange / Agent mutation 必须记录 `baseRevision`，旧 revision 的修改不能静默覆盖新状态。
 
-## 3. Agent 策略
+所有持久化修改必须落为 Patch；Ghost Preview、Apply、Undo/Redo 和审计都复用同一语义。
 
-Worldform 自身不实现聊天机器人，不维护模型供应商、API Key、模型路由、Token 统计或对话历史。
+## 5. Adapter 规则
 
-Agent 接口依次通过：
+`adapter-api` 保持小而稳定；`adapter-sdk` 提供开发便利、schema/descriptor 帮助、测试工具与模板；`Adapter Host` 负责加载、生命周期和 Transport。
 
-1. Markdown / Skill
+不要把 stdio / HTTP / IPC 细节直接塞进业务 Adapter 接口。项目 Adapter 应描述“提供什么能力”，Host 决定“如何加载与调用”。
+
+新增 Adapter 功能时必须回答：
+
+- 它是通用场景语义还是项目语义？
+- 能否不修改 Core 完成？
+- 是否能由独立仓库实现并测试？
+- 是否需要新的 capability / schema / preview descriptor，而不是新的硬编码分支？
+
+## 6. Agent 策略
+
+Worldform 不实现聊天机器人，不维护模型供应商、API Key、Token、模型路由、对话历史或 Agent Runtime。
+
+外部 Agent 入口：
+
+1. Markdown / `.agents/skills`
 2. CLI
 3. MCP
 
-对运行中场景的智能体修改必须最终落为可检查的结构化 Operation / Patch。后续 Ghost Preview 应建立在 Patch 上，而不是让 Agent 直接修改渲染对象。
+仓库开发 Skill 与第三方 Adapter 开发 Skill 必须分开，避免 Agent 把“修改 Worldform”误当成“接入 Worldform”。
 
-## 4. 第一阶段开发范围
+## 7. 代码规范
 
-当前阶段优先级：
+- TypeScript 严格模式；公共 API 禁止用 `any` 绕过边界。
+- Core 关键转换优先纯函数。
+- 对外格式变更必须考虑迁移与兼容。
+- 新增 Core 能力前检查是否至少两个真实项目需要。
+- 新增公共协议时同步更新架构、ADR、任务和示例。
+- 不为当前 PoC 预先实现完整 Director、材质/VFX/动画、物理、导航或完整引擎双向同步。
 
-1. SceneDocument 最小模型
-2. Patch / Operations 契约
-3. 基础校验
-4. Project Adapter API
-5. Pascal 接入隔离层
-6. 两个真实项目适配样例
-7. 构建、测试、文档
-
-本阶段不做：
-
-- 完整 Director
-- 完整 MCP
-- 完整 CLI 产品体验
-- 内置 LLM
-- 完整材质/VFX/动画编辑器
-- 通用物理或导航系统
-- Unreal/Unity 全场景双向同步
-
-## 5. 代码规范
-
-- TypeScript 严格模式。
-- 公共 API 需要明确类型，禁止用 `any` 绕过边界。
-- Core 的关键转换尽量写成纯函数。
-- Schema/version 字段从第一天保留。
-- 所有项目适配必须能够独立测试。
-- 新增 Core 能力前，先判断是否至少两个真实项目会使用；否则优先进入 adapter。
-- 对外格式变更必须考虑迁移策略，不直接静默破坏旧文档。
-
-## 6. 提交前检查
+## 8. 提交前检查
 
 至少执行：
 
 ```bash
 pnpm check
 pnpm test
+pnpm lint
 ```
 
-如果修改 Project Adapter，还应增加或更新契约测试。
+涉及 Adapter SDK / Workspace 时还应增加相应契约测试。
 
-## 7. 文档入口
+## 9. 文档入口
 
-开发前阅读：
+按顺序阅读：
 
-- `README.md`
-- `docs/ARCHITECTURE.md`
-- `docs/ROADMAP.md`
-- `docs/PROJECT_ADAPTER.md`
-- `docs/AGENT_INTERFACE.md`
-- `docs/decisions/`
+1. `README.md`
+2. `docs/PRODUCT_DEFINITION.md`
+3. `docs/ARCHITECTURE.md`
+4. `docs/ROADMAP.md`
+5. `docs/PROJECT_ADAPTER.md`
+6. `docs/THIRD_PARTY_INTEGRATION.md`
+7. `docs/AGENT_INTERFACE.md`
+8. `docs/decisions/`
+9. 当前 `docs/tasks/` 任务
 
-如果代码实现与架构文档冲突，不要静默选择其一；应同步更新 ADR 或明确提出冲突。
+如果代码实现与架构文档冲突，不要静默选择其一；应更新 ADR 或明确提出冲突。
