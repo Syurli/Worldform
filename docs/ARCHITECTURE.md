@@ -43,7 +43,7 @@ Director 与成熟引擎 Bridge 在后续阶段接入 Workspace，不绕过应�
 
 Worldform 的权威场景数据是 `SceneDocument`，不是渲染器对象。
 
-当前核心包含文档 ID、schemaVersion、projectAdapterId、扁平节点、rootNodeIds、资源、引用和 metadata。
+当前核心包含文档 ID、`formatVersion`、`projectAdapterId`、`projectSchemaVersion`、扁平节点、rootNodeIds、资源、引用和 metadata。运行态 revision 由 Workspace 单独维护，不写入磁盘文档。
 
 `components` 是扩展容器。Core 不解释 `wfcConnector`、`placementRule` 等业务语义；具体 schema 与行为由项目 Adapter 提供。
 
@@ -55,7 +55,7 @@ Worldform 的权威场景数据是 `SceneDocument`，不是渲染器对象。
 
 ## 4. Scene Patch 与 History
 
-所有可持久化修改必须统一落为结构化 Patch。当前 Core 已实现 create/update/delete、逆 Patch、History、稳定序列化和 Migration。
+所有可持久化修改必须统一落为结构化 Patch。当前 Core 已实现 Node/Resource create/update/delete、Component/Property 细粒度修改、逆 Patch、History、稳定序列化和 Migration。
 
 后续人工编辑、Capability、CLI、MCP、Ghost Preview 不得各自维护独立 mutation 格式。
 
@@ -124,7 +124,7 @@ DraftChange
 3. **Project scene schema version**：项目组件/节点语义版本；
 4. **Adapter implementation version**：某个 Adapter 包自身版本。
 
-P1-002 负责收口命名、兼容规则与迁移边界。
+P1-002 已收口命名、主版本兼容规则与显式迁移边界，详见 ADR-006。
 
 ## 8. Project Adapter：API、SDK、Host 分离
 

@@ -1,5 +1,11 @@
 import { cloneSceneData } from './clone.js'
-import type { SceneDocument, SceneNode, SceneNodeId } from './model.js'
+import type {
+  SceneDocument,
+  SceneNode,
+  SceneNodeId,
+  SceneResource,
+  SceneResourceId,
+} from './model.js'
 
 export type SceneNodeOptionalKey =
   | 'name'
@@ -34,7 +40,65 @@ export interface DeleteSceneNodePatch {
   cascade?: boolean
 }
 
-export type ScenePatch = CreateSceneNodePatch | UpdateSceneNodePatch | DeleteSceneNodePatch
+export type SceneResourceOptionalKey = 'type' | 'metadata'
+
+export interface CreateSceneResourcePatch {
+  op: 'resource.create'
+  resource: SceneResource
+}
+
+export interface UpdateSceneResourcePatch {
+  op: 'resource.update'
+  id: SceneResourceId
+  changes: Partial<Omit<SceneResource, 'id'>>
+  unset?: readonly SceneResourceOptionalKey[]
+}
+
+export interface DeleteSceneResourcePatch {
+  op: 'resource.delete'
+  id: SceneResourceId
+}
+
+export interface SetSceneComponentPatch {
+  op: 'component.set'
+  id: SceneNodeId
+  component: string
+  value: unknown
+}
+
+export interface DeleteSceneComponentPatch {
+  op: 'component.delete'
+  id: SceneNodeId
+  component: string
+}
+
+export interface SetSceneComponentPropertyPatch {
+  op: 'component.setProperty'
+  id: SceneNodeId
+  component: string
+  /** Phase 1 属性路径只穿过普通对象，不隐式操作数组索引。 */
+  path: readonly string[]
+  value: unknown
+}
+
+export interface DeleteSceneComponentPropertyPatch {
+  op: 'component.deleteProperty'
+  id: SceneNodeId
+  component: string
+  path: readonly string[]
+}
+
+export type ScenePatch =
+  | CreateSceneNodePatch
+  | UpdateSceneNodePatch
+  | DeleteSceneNodePatch
+  | CreateSceneResourcePatch
+  | UpdateSceneResourcePatch
+  | DeleteSceneResourcePatch
+  | SetSceneComponentPatch
+  | DeleteSceneComponentPatch
+  | SetSceneComponentPropertyPatch
+  | DeleteSceneComponentPropertyPatch
 
 export interface ApplyPatchResult {
   document: SceneDocument
@@ -66,9 +130,16 @@ const MUTABLE_NODE_KEYS = new Set<keyof Omit<SceneNode, 'id'>>([
   'metadata',
 ])
 
+const OPTIONAL_RESOURCE_KEYS = new Set<SceneResourceOptionalKey>(['type', 'metadata'])
+
+const MUTABLE_RESOURCE_KEYS = new Set<keyof Omit<SceneResource, 'id'>>(['uri', 'type', 'metadata'])
+
+const UNSAFE_PROPERTY_KEYS = new Set(['__proto__', 'prototype', 'constructor'])
+
 interface MutableDocumentState {
   nodes: Record<SceneNodeId, SceneNode>
   rootNodeIds: SceneNodeId[]
+  resources: Record<SceneResourceId, SceneResource>
 }
 
 function isRoot(node: SceneNode): boolean {
@@ -264,6 +335,258 @@ function applyDeletePatch(
   return inversePatches
 }
 
+function assertResourceUpdatePatch(patch: UpdateSceneResourcePatch): void {
+  for (const key of Object.keys(patch.changes)) {
+    if (!MUTABLE_RESOURCE_KEYS.has(key as keyof Omit<SceneResource, 'id'>)) {
+      throw new Error(`Scene resource field cannot be updated: ${key}`)
+    }
+    if (patch.changes[key as keyof typeof patch.changes] === undefined) {
+      throw new Error(`Use unset instead of undefined for scene resource field: ${key}`)
+    }
+  }
+
+  const seenUnset = new Set<SceneResourceOptionalKey>()
+  for (const key of patch.unset ?? []) {
+    if (!OPTIONAL_RESOURCE_KEYS.has(key)) {
+      throw new Error(`Scene resource field cannot be unset: ${key}`)
+    }
+    if (seenUnset.has(key)) throw new Error(`Scene resource field is unset more than once: ${key}`)
+    if (Object.hasOwn(patch.changes, key)) {
+      throw new Error(`Scene resource field cannot be changed and unset together: ${key}`)
+    }
+    seenUnset.add(key)
+  }
+}
+
+function applyCreateResourcePatch(
+  state: MutableDocumentState,
+  patch: CreateSceneResourcePatch,
+): readonly ScenePatch[] {
+  if (state.resources[patch.resource.id]) {
+    throw new Error(`Scene resource already exists: ${patch.resource.id}`)
+  }
+  state.resources[patch.resource.id] = cloneSceneData(patch.resource)
+  return [{ op: 'resource.delete', id: patch.resource.id }]
+}
+
+function applyUpdateResourcePatch(
+  state: MutableDocumentState,
+  patch: UpdateSceneResourcePatch,
+): readonly ScenePatch[] {
+  assertResourceUpdatePatch(patch)
+  const current = state.resources[patch.id]
+  if (!current) throw new Error(`Scene resource does not exist: ${patch.id}`)
+
+  const changes: Partial<Omit<SceneResource, 'id'>> = {}
+  const unset: SceneResourceOptionalKey[] = []
+  const touchedKeys = new Set<string>([...Object.keys(patch.changes), ...(patch.unset ?? [])])
+  for (const key of touchedKeys) {
+    if (Object.hasOwn(current, key)) {
+      Object.assign(changes, { [key]: cloneSceneData(current[key as keyof SceneResource]) })
+    } else if (OPTIONAL_RESOURCE_KEYS.has(key as SceneResourceOptionalKey)) {
+      unset.push(key as SceneResourceOptionalKey)
+    }
+  }
+
+  const next = cloneSceneData({ ...current, ...patch.changes, id: current.id })
+  for (const key of patch.unset ?? []) delete next[key]
+  state.resources[patch.id] = next
+
+  return [
+    {
+      op: 'resource.update',
+      id: current.id,
+      changes,
+      ...(unset.length > 0 ? { unset } : {}),
+    },
+  ]
+}
+
+function applyDeleteResourcePatch(
+  state: MutableDocumentState,
+  patch: DeleteSceneResourcePatch,
+): readonly ScenePatch[] {
+  const current = state.resources[patch.id]
+  if (!current) throw new Error(`Scene resource does not exist: ${patch.id}`)
+  delete state.resources[patch.id]
+  return [{ op: 'resource.create', resource: cloneSceneData(current) }]
+}
+
+function assertComponentName(component: string): void {
+  if (component.length === 0) throw new Error('Scene component name must not be empty')
+}
+
+function assertComponentPropertyPath(path: readonly string[]): void {
+  if (path.length === 0) throw new Error('Scene component property path must not be empty')
+  for (const segment of path) {
+    if (segment.length === 0)
+      throw new Error('Scene component property path contains an empty segment')
+    if (UNSAFE_PROPERTY_KEYS.has(segment)) {
+      throw new Error(`Unsafe scene component property path segment: ${segment}`)
+    }
+  }
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false
+  const prototype = Object.getPrototypeOf(value)
+  return prototype === Object.prototype || prototype === null
+}
+
+function getNodeForComponent(state: MutableDocumentState, id: SceneNodeId): SceneNode {
+  const node = state.nodes[id]
+  if (!node) throw new Error(`Scene node does not exist: ${id}`)
+  return node
+}
+
+function setComponentValue(
+  state: MutableDocumentState,
+  node: SceneNode,
+  component: string,
+  value: unknown,
+): void {
+  const components = cloneSceneData({ ...(node.components ?? {}) })
+  components[component] = cloneSceneData(value)
+  state.nodes[node.id] = { ...node, components }
+}
+
+function applySetComponentPatch(
+  state: MutableDocumentState,
+  patch: SetSceneComponentPatch,
+): readonly ScenePatch[] {
+  assertComponentName(patch.component)
+  const node = getNodeForComponent(state, patch.id)
+  const existed = Object.hasOwn(node.components ?? {}, patch.component)
+  const previous = node.components?.[patch.component]
+  setComponentValue(state, node, patch.component, patch.value)
+
+  return existed
+    ? [
+        {
+          op: 'component.set',
+          id: node.id,
+          component: patch.component,
+          value: cloneSceneData(previous),
+        },
+      ]
+    : [{ op: 'component.delete', id: node.id, component: patch.component }]
+}
+
+function applyDeleteComponentPatch(
+  state: MutableDocumentState,
+  patch: DeleteSceneComponentPatch,
+): readonly ScenePatch[] {
+  assertComponentName(patch.component)
+  const node = getNodeForComponent(state, patch.id)
+  if (!Object.hasOwn(node.components ?? {}, patch.component)) {
+    throw new Error(`Scene component does not exist: ${patch.component}`)
+  }
+
+  const previous = cloneSceneData(node.components?.[patch.component])
+  const components = cloneSceneData({ ...(node.components ?? {}) })
+  delete components[patch.component]
+  state.nodes[node.id] =
+    Object.keys(components).length === 0
+      ? (() => {
+          const next = { ...node }
+          delete next.components
+          return next
+        })()
+      : { ...node, components }
+
+  return [{ op: 'component.set', id: node.id, component: patch.component, value: previous }]
+}
+
+function getMutableComponentObject(node: SceneNode, component: string): Record<string, unknown> {
+  if (!Object.hasOwn(node.components ?? {}, component)) {
+    throw new Error(`Scene component does not exist: ${component}`)
+  }
+  const value = cloneSceneData(node.components?.[component])
+  if (!isPlainRecord(value)) {
+    throw new Error(`Scene component must be an object for property mutation: ${component}`)
+  }
+  return value
+}
+
+function getPropertyOwner(
+  componentValue: Record<string, unknown>,
+  path: readonly string[],
+): { owner: Record<string, unknown>; property: string } {
+  let owner = componentValue
+  for (const segment of path.slice(0, -1)) {
+    const next = owner[segment]
+    if (!isPlainRecord(next)) {
+      throw new Error(`Scene component property parent is not an object: ${segment}`)
+    }
+    owner = next
+  }
+
+  const property = path.at(-1)
+  if (property === undefined) throw new Error('Scene component property path must not be empty')
+  return { owner, property }
+}
+
+function applySetComponentPropertyPatch(
+  state: MutableDocumentState,
+  patch: SetSceneComponentPropertyPatch,
+): readonly ScenePatch[] {
+  assertComponentName(patch.component)
+  assertComponentPropertyPath(patch.path)
+  const node = getNodeForComponent(state, patch.id)
+  const componentValue = getMutableComponentObject(node, patch.component)
+  const { owner, property } = getPropertyOwner(componentValue, patch.path)
+  const existed = Object.hasOwn(owner, property)
+  const previous = owner[property]
+  owner[property] = cloneSceneData(patch.value)
+  setComponentValue(state, node, patch.component, componentValue)
+
+  return existed
+    ? [
+        {
+          op: 'component.setProperty',
+          id: node.id,
+          component: patch.component,
+          path: cloneSceneData(patch.path),
+          value: cloneSceneData(previous),
+        },
+      ]
+    : [
+        {
+          op: 'component.deleteProperty',
+          id: node.id,
+          component: patch.component,
+          path: cloneSceneData(patch.path),
+        },
+      ]
+}
+
+function applyDeleteComponentPropertyPatch(
+  state: MutableDocumentState,
+  patch: DeleteSceneComponentPropertyPatch,
+): readonly ScenePatch[] {
+  assertComponentName(patch.component)
+  assertComponentPropertyPath(patch.path)
+  const node = getNodeForComponent(state, patch.id)
+  const componentValue = getMutableComponentObject(node, patch.component)
+  const { owner, property } = getPropertyOwner(componentValue, patch.path)
+  if (!Object.hasOwn(owner, property)) {
+    throw new Error(`Scene component property does not exist: ${patch.path.join('.')}`)
+  }
+
+  const previous = cloneSceneData(owner[property])
+  delete owner[property]
+  setComponentValue(state, node, patch.component, componentValue)
+  return [
+    {
+      op: 'component.setProperty',
+      id: node.id,
+      component: patch.component,
+      path: cloneSceneData(patch.path),
+      value: previous,
+    },
+  ]
+}
+
 function applySinglePatch(state: MutableDocumentState, patch: ScenePatch): readonly ScenePatch[] {
   switch (patch.op) {
     case 'create':
@@ -272,6 +595,20 @@ function applySinglePatch(state: MutableDocumentState, patch: ScenePatch): reado
       return applyUpdatePatch(state, patch)
     case 'delete':
       return applyDeletePatch(state, patch)
+    case 'resource.create':
+      return applyCreateResourcePatch(state, patch)
+    case 'resource.update':
+      return applyUpdateResourcePatch(state, patch)
+    case 'resource.delete':
+      return applyDeleteResourcePatch(state, patch)
+    case 'component.set':
+      return applySetComponentPatch(state, patch)
+    case 'component.delete':
+      return applyDeleteComponentPatch(state, patch)
+    case 'component.setProperty':
+      return applySetComponentPropertyPatch(state, patch)
+    case 'component.deleteProperty':
+      return applyDeleteComponentPropertyPatch(state, patch)
   }
 }
 
@@ -289,6 +626,7 @@ export function applyScenePatchesWithInverse(
   const state: MutableDocumentState = {
     nodes: { ...sourceCopy.nodes },
     rootNodeIds: [...sourceCopy.rootNodeIds],
+    resources: { ...sourceCopy.resources },
   }
   const inversePatches: ScenePatch[] = []
 
@@ -303,6 +641,7 @@ export function applyScenePatchesWithInverse(
       ...sourceCopy,
       nodes: state.nodes,
       rootNodeIds: state.rootNodeIds,
+      resources: state.resources,
     },
     applied: patches.length,
     inversePatches,

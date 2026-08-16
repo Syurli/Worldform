@@ -1,5 +1,10 @@
 import { migrateSceneDocument, type SceneDocumentMigration } from './migration.js'
 import type { SceneDocument } from './model.js'
+import {
+  assertProtocolVersionCompatible,
+  WORLDFORM_DOCUMENT_FORMAT_VERSION,
+  type DocumentFormatVersion,
+} from './version.js'
 
 export type JsonPrimitive = string | number | boolean | null
 export type JsonValue = JsonPrimitive | JsonObject | readonly JsonValue[]
@@ -14,8 +19,10 @@ export interface SerializeSceneDocumentOptions {
 
 export interface DeserializeSceneDocumentOptions {
   /** 指定后会在解析基础结构后按显式 migration 链迁移。 */
-  targetSchemaVersion?: string
+  targetFormatVersion?: DocumentFormatVersion
   migrations?: readonly SceneDocumentMigration[]
+  /** 调用方支持的文档格式；默认使用当前 Core 版本。 */
+  supportedFormatVersion?: DocumentFormatVersion
 }
 
 export class SceneSerializationError extends Error {
@@ -37,12 +44,16 @@ function assertString(value: unknown, path: string): asserts value is string {
 function assertSceneDocumentShape(value: unknown): asserts value is SceneDocument {
   if (!isRecord(value)) throw new SceneSerializationError('Scene document must be an object')
   assertString(value.id, 'id')
-  assertString(value.schemaVersion, 'schemaVersion')
+  assertString(value.formatVersion, 'formatVersion')
 
   if (value.projectAdapterId !== undefined) {
     assertString(value.projectAdapterId, 'projectAdapterId')
   }
+  if (value.projectSchemaVersion !== undefined) {
+    assertString(value.projectSchemaVersion, 'projectSchemaVersion')
+  }
   if (!isRecord(value.nodes)) throw new SceneSerializationError('nodes must be an object')
+  if (!isRecord(value.resources)) throw new SceneSerializationError('resources must be an object')
   if (!Array.isArray(value.rootNodeIds)) {
     throw new SceneSerializationError('rootNodeIds must be an array')
   }
@@ -58,10 +69,6 @@ function assertSceneDocumentShape(value: unknown): asserts value is SceneDocumen
     if (!isRecord(node.transform)) {
       throw new SceneSerializationError(`nodes.${key}.transform must be an object`)
     }
-  }
-
-  if (value.resources !== undefined && !isRecord(value.resources)) {
-    throw new SceneSerializationError('resources must be an object')
   }
 }
 
@@ -136,7 +143,7 @@ export function serializeSceneDocument(
   return `${JSON.stringify(stableValue, null, space)}\n`
 }
 
-/** 解析稳定 JSON，并可选地迁移到调用方指定的 schemaVersion。 */
+/** 解析稳定 JSON，并可选地迁移到调用方指定的文档格式版本。 */
 export function deserializeSceneDocument(
   serialized: string,
   options: DeserializeSceneDocumentOptions = {},
@@ -151,9 +158,14 @@ export function deserializeSceneDocument(
 
   assertSceneDocumentShape(parsed)
   const document =
-    options.targetSchemaVersion === undefined
+    options.targetFormatVersion === undefined
       ? parsed
-      : migrateSceneDocument(parsed, options.targetSchemaVersion, options.migrations ?? [])
+      : migrateSceneDocument(parsed, options.targetFormatVersion, options.migrations ?? [])
   assertSceneDocumentShape(document)
+  assertProtocolVersionCompatible(
+    options.supportedFormatVersion ?? WORLDFORM_DOCUMENT_FORMAT_VERSION,
+    document.formatVersion,
+    'Worldform document format',
+  )
   return document
 }

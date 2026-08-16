@@ -16,7 +16,7 @@ Worldform 不以“尽快把《战术巫师》或《物有所归》做进编辑�
 
 已有：SceneDocument、Patch、逆 Patch、SceneHistory、稳定 JSON、Migration、资源/引用和结构验证。
 
-## P1-002 Core Contract Hardening
+## P1-002 Core Contract Hardening — 已完成
 
 收口：
 

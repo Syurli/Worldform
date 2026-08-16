@@ -26,9 +26,10 @@ describe('SceneDocument structural validation', () => {
     }
     const document: SceneDocument = {
       id: 'invalid-structure',
-      schemaVersion: '0.1.0',
+      formatVersion: '1.0.0',
       nodes: { 'wrong-map-key': root, child },
       rootNodeIds: ['child', 'missing-root', 'missing-root'],
+      resources: {},
     }
 
     const codes = issueCodes(document)
@@ -43,12 +44,13 @@ describe('SceneDocument structural validation', () => {
   it('detects parent cycles', () => {
     const document: SceneDocument = {
       id: 'cycle',
-      schemaVersion: '0.1.0',
+      formatVersion: '1.0.0',
       nodes: {
         a: { id: 'a', type: 'group', parentId: 'b', transform: IDENTITY_TRANSFORM },
         b: { id: 'b', type: 'group', parentId: 'a', transform: IDENTITY_TRANSFORM },
       },
       rootNodeIds: [],
+      resources: {},
     }
 
     const result = validateSceneDocument(document)
@@ -59,7 +61,7 @@ describe('SceneDocument structural validation', () => {
   it('reports dangling generic node and resource references', () => {
     const document: SceneDocument = {
       id: 'references',
-      schemaVersion: '0.1.0',
+      formatVersion: '1.0.0',
       nodes: {
         root: {
           id: 'root',
@@ -92,7 +94,7 @@ describe('SceneDocument structural validation', () => {
   it('reports non-finite tuples, malformed scale and a zero quaternion', () => {
     const document: SceneDocument = {
       id: 'transform',
-      schemaVersion: '0.1.0',
+      formatVersion: '1.0.0',
       nodes: {
         nonFinite: {
           id: 'nonFinite',
@@ -114,6 +116,7 @@ describe('SceneDocument structural validation', () => {
         },
       },
       rootNodeIds: ['nonFinite', 'zeroRotation'],
+      resources: {},
     }
 
     const codes = issueCodes(document)

@@ -1,3 +1,9 @@
+import {
+  WORLDFORM_DOCUMENT_FORMAT_VERSION,
+  type DocumentFormatVersion,
+  type ProjectSceneSchemaVersion,
+} from './version.js'
+
 export type SceneNodeId = string
 export type SceneResourceId = string
 
@@ -57,11 +63,14 @@ export interface SceneNode {
 
 export interface SceneDocument {
   id: string
-  schemaVersion: string
+  /** Worldform 通用文档格式版本，不承载项目或 Adapter 版本语义。 */
+  formatVersion: DocumentFormatVersion
   projectAdapterId?: string
+  /** 项目节点、组件与属性的语义版本，由 Project Adapter 管理。 */
+  projectSchemaVersion?: ProjectSceneSchemaVersion
   nodes: Readonly<Record<SceneNodeId, SceneNode>>
   rootNodeIds: readonly SceneNodeId[]
-  resources?: Readonly<Record<SceneResourceId, SceneResource>>
+  resources: Readonly<Record<SceneResourceId, SceneResource>>
   metadata?: Readonly<Record<string, unknown>>
 }
 
@@ -73,15 +82,21 @@ export const IDENTITY_TRANSFORM: TransformData = {
 
 export function createEmptySceneDocument(input: {
   id: string
-  schemaVersion?: string
+  formatVersion?: DocumentFormatVersion
   projectAdapterId?: string
+  projectSchemaVersion?: ProjectSceneSchemaVersion
 }): SceneDocument {
   const base = {
     id: input.id,
-    schemaVersion: input.schemaVersion ?? '0.1.0',
+    formatVersion: input.formatVersion ?? WORLDFORM_DOCUMENT_FORMAT_VERSION,
     nodes: {},
     rootNodeIds: [],
+    resources: {},
   }
 
-  return input.projectAdapterId ? { ...base, projectAdapterId: input.projectAdapterId } : base
+  return {
+    ...base,
+    ...(input.projectAdapterId ? { projectAdapterId: input.projectAdapterId } : {}),
+    ...(input.projectSchemaVersion ? { projectSchemaVersion: input.projectSchemaVersion } : {}),
+  }
 }

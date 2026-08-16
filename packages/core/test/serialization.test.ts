@@ -32,8 +32,9 @@ function createPopulatedDocument(): SceneDocument {
   const base: SceneDocument = {
     ...createEmptySceneDocument({
       id: 'serialization',
-      schemaVersion: '0.1.0',
+      formatVersion: '1.0.0',
       projectAdapterId: 'example.adapter',
+      projectSchemaVersion: '1.0.0',
     }),
     resources: {
       'mesh.crate': {
@@ -88,7 +89,8 @@ describe('SceneDocument serialization', () => {
         },
       },
       projectAdapterId: 'example.adapter',
-      schemaVersion: '0.1.0',
+      projectSchemaVersion: '1.0.0',
+      formatVersion: '1.0.0',
       id: 'serialization',
     }
 
@@ -126,12 +128,12 @@ describe('SceneDocument serialization', () => {
 
 describe('SceneDocument migration', () => {
   const migration: SceneDocumentMigration = {
-    fromVersion: '0.1.0',
-    toVersion: '0.2.0',
+    fromVersion: '1.0.0',
+    toVersion: '1.1.0',
     migrate(document) {
       return {
         ...document,
-        schemaVersion: '0.2.0',
+        formatVersion: '1.1.0',
         metadata: { ...document.metadata, migrated: true },
       }
     },
@@ -139,20 +141,20 @@ describe('SceneDocument migration', () => {
 
   it('runs an explicit migration chain without mutating the source', () => {
     const source = createPopulatedDocument()
-    const migrated = migrateSceneDocument(source, '0.2.0', [migration])
+    const migrated = migrateSceneDocument(source, '1.1.0', [migration])
 
-    expect(source.schemaVersion).toBe('0.1.0')
+    expect(source.formatVersion).toBe('1.0.0')
     expect(source.metadata).toEqual({ author: 'Worldform test' })
-    expect(migrated.schemaVersion).toBe('0.2.0')
+    expect(migrated.formatVersion).toBe('1.1.0')
     expect(migrated.metadata).toEqual({ author: 'Worldform test', migrated: true })
   })
 
   it('can migrate as part of deserialization', () => {
     const migrated = deserializeSceneDocument(serializeSceneDocument(createPopulatedDocument()), {
-      targetSchemaVersion: '0.2.0',
+      targetFormatVersion: '1.1.0',
       migrations: [migration],
     })
 
-    expect(migrated.schemaVersion).toBe('0.2.0')
+    expect(migrated.formatVersion).toBe('1.1.0')
   })
 })

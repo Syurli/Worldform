@@ -1,14 +1,22 @@
 import type {
+  AdapterApiVersion,
+  AdapterImplementationVersion,
+  ProjectSceneSchemaVersion,
   SceneDocument,
   ScenePatch,
   ValidationResult,
 } from '@worldform/core'
+import { assertProtocolVersionCompatible } from '@worldform/core'
+
+/** 当前 Adapter API 公共协议版本。 */
+export const WORLDFORM_ADAPTER_API_VERSION: AdapterApiVersion = '1.0.0'
 
 export interface ProjectAdapterManifest {
   id: string
   displayName: string
-  version: string
-  sceneSchemaVersion: string
+  adapterApiVersion: AdapterApiVersion
+  version: AdapterImplementationVersion
+  sceneSchemaVersion: ProjectSceneSchemaVersion
   description?: string
 }
 
@@ -70,10 +78,7 @@ export interface WorldformProjectAdapter {
 
   listExportTargets?(): readonly ProjectExportTarget[]
 
-  exportDocument?(
-    targetId: string,
-    document: SceneDocument,
-  ): Promise<ProjectExportResult>
+  exportDocument?(targetId: string, document: SceneDocument): Promise<ProjectExportResult>
 }
 
 export function assertAdapterMatchesDocument(
@@ -85,4 +90,17 @@ export function assertAdapterMatchesDocument(
       `Scene expects adapter "${document.projectAdapterId}" but received "${adapter.manifest.id}"`,
     )
   }
+  if (
+    document.projectSchemaVersion &&
+    document.projectSchemaVersion !== adapter.manifest.sceneSchemaVersion
+  ) {
+    throw new Error(
+      `Scene expects project schema "${document.projectSchemaVersion}" but adapter provides "${adapter.manifest.sceneSchemaVersion}"`,
+    )
+  }
+  assertProtocolVersionCompatible(
+    WORLDFORM_ADAPTER_API_VERSION,
+    adapter.manifest.adapterApiVersion,
+    'Worldform adapter API',
+  )
 }

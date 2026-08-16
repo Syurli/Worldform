@@ -1,14 +1,25 @@
 import type { SceneDocument, SceneNode, SceneNodeId, SceneReference } from './model.js'
+import {
+  isProtocolVersionCompatible,
+  parseProtocolVersion,
+  WORLDFORM_DOCUMENT_FORMAT_VERSION,
+} from './version.js'
 
 export type ValidationSeverity = 'error' | 'warning' | 'info'
+export type ValidationIssueSource = 'core' | 'adapter' | 'workspace' | 'bridge'
+export type ValidationIssueCode = `${string}.${string}`
 
 export interface ValidationIssue {
-  code: string
+  /** 使用 `namespace.identifier` 形式的稳定机器码。 */
+  code: ValidationIssueCode
   severity: ValidationSeverity
   message: string
   nodeId?: SceneNodeId
+  /** 使用 SceneDocument 字段路径，不包含本地文件系统路径。 */
   path?: string
-  source?: 'core' | 'adapter' | 'bridge'
+  source: ValidationIssueSource
+  /** Adapter/Bridge 等多实例来源可在此标记具体实现 ID。 */
+  sourceId?: string
 }
 
 export interface ValidationResult {
@@ -18,7 +29,7 @@ export interface ValidationResult {
 
 function addCoreError(
   issues: ValidationIssue[],
-  code: string,
+  code: ValidationIssueCode,
   message: string,
   details: Pick<ValidationIssue, 'nodeId' | 'path'> = {},
 ): void {
@@ -154,7 +165,7 @@ function validateNodeReferences(
 }
 
 function validateResources(document: SceneDocument, issues: ValidationIssue[]): void {
-  for (const [key, resource] of Object.entries(document.resources ?? {})) {
+  for (const [key, resource] of Object.entries(document.resources)) {
     if (!isRecord(resource)) {
       addCoreError(issues, 'core.invalid_resource', `Resource must be an object: ${key}`, {
         path: `resources.${key}`,
@@ -185,6 +196,44 @@ function validateResources(document: SceneDocument, issues: ValidationIssue[]): 
   }
 }
 
+function validateVersions(document: SceneDocument, issues: ValidationIssue[]): void {
+  try {
+    parseProtocolVersion(document.formatVersion)
+    if (!isProtocolVersionCompatible(WORLDFORM_DOCUMENT_FORMAT_VERSION, document.formatVersion)) {
+      addCoreError(
+        issues,
+        'core.incompatible_document_format',
+        `Document format ${document.formatVersion} is incompatible with ${WORLDFORM_DOCUMENT_FORMAT_VERSION}`,
+        { path: 'formatVersion' },
+      )
+    }
+  } catch {
+    addCoreError(
+      issues,
+      'core.invalid_document_format_version',
+      `Invalid document format version: ${document.formatVersion}`,
+      { path: 'formatVersion' },
+    )
+  }
+
+  if (document.projectAdapterId !== undefined && document.projectSchemaVersion === undefined) {
+    addCoreError(
+      issues,
+      'core.missing_project_schema_version',
+      `Scene using adapter ${document.projectAdapterId} must declare projectSchemaVersion`,
+      { path: 'projectSchemaVersion' },
+    )
+  }
+  if (document.projectAdapterId === undefined && document.projectSchemaVersion !== undefined) {
+    addCoreError(
+      issues,
+      'core.project_schema_without_adapter',
+      'projectSchemaVersion requires projectAdapterId',
+      { path: 'projectSchemaVersion' },
+    )
+  }
+}
+
 /**
  * 校验所有不依赖具体项目语义的 SceneDocument 结构。
  * Adapter 组件内部 schema 与业务规则必须在后续 Adapter Validator 阶段处理。
@@ -192,6 +241,8 @@ function validateResources(document: SceneDocument, issues: ValidationIssue[]): 
 export function validateSceneDocument(document: SceneDocument): ValidationResult {
   const issues: ValidationIssue[] = []
   const roots = new Set<SceneNodeId>()
+
+  validateVersions(document, issues)
 
   for (const [index, rootId] of document.rootNodeIds.entries()) {
     if (roots.has(rootId)) {
@@ -280,6 +331,15 @@ export function validateSceneDocument(document: SceneDocument): ValidationResult
   }
 
   validateResources(document, issues)
+  return {
+    valid: !issues.some((issue) => issue.severity === 'error'),
+    issues,
+  }
+}
+
+/** 合并 Core、Adapter 与 Bridge 验证结果，同时重新计算最终 valid。 */
+export function mergeValidationResults(...results: readonly ValidationResult[]): ValidationResult {
+  const issues = results.flatMap((result) => result.issues)
   return {
     valid: !issues.some((issue) => issue.severity === 'error'),
     issues,

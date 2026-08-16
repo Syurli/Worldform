@@ -5,7 +5,7 @@ Phase 1 已重新排序为“先第三方可接入，再真实项目接入”。
 ```text
 P1-001 Core History / Serialization ✅
            ↓
-P1-002 Core Contract Hardening
+P1-002 Core Contract Hardening ✅
            ↓
 P1-003 Workspace / Session
            ↓
@@ -32,7 +32,7 @@ P1-009 Clean-room Validation
 ## 当前任务文件
 
 - `P1-001_CORE_HISTORY_SERIALIZATION.md` — 已完成
-- `P1-002_CORE_CONTRACT_HARDENING.md`
+- `P1-002_CORE_CONTRACT_HARDENING.md` — 已完成
 - `P1-003_WORKSPACE_SESSION.md`
 - `P1-004_ADAPTER_SDK_EXAMPLE.md`
 - `P1-005_PASCAL_AUTHORING_ALPHA.md`

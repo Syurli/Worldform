@@ -29,3 +29,15 @@
 - revision/DraftChange 后续可被 Workspace 使用；
 - 关键边界有测试；
 - `pnpm check && pnpm test && pnpm lint` 通过。
+
+## 实施记录
+
+- 状态：已完成；
+- `schemaVersion` 已拆分为 `formatVersion` 与 `projectSchemaVersion`；
+- Adapter manifest 明确 `adapterApiVersion / sceneSchemaVersion / version`；
+- Core 新增 `SceneRevision`、`DraftChange` 与冲突错误；
+- Patch 新增 Resource create/update/delete；
+- Patch 新增 Component set/delete 与普通对象属性级 set/delete；
+- ValidationIssue 固定 source、命名空间 code、文档 path 与可选 sourceId；
+- 版本、迁移、冲突、资源和细粒度组件操作均有测试；
+- 设计决策见 `ADR-006-CORE-VERSION-REVISION-CONTRACT.md`。
