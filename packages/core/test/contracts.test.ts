@@ -8,6 +8,7 @@ import {
   assertSceneRevision,
   createEmptySceneDocument,
   deserializeSceneDocument,
+  mergeValidationResults,
   serializeSceneDocument,
   validateSceneDocument,
   type DraftChange,
@@ -61,6 +62,12 @@ describe('正式版本与 revision 契约', () => {
       status: 'preview',
     }
     expect(draft.baseRevision).toBe(5)
+  })
+
+  it('合并验证结果时保留显式 invalid 状态', () => {
+    expect(
+      mergeValidationResults({ valid: true, issues: [] }, { valid: false, issues: [] }),
+    ).toEqual({ valid: false, issues: [] })
   })
 })
 

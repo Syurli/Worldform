@@ -61,7 +61,7 @@ Worldform 的权威场景数据是 `SceneDocument`，不是渲染器对象。
 
 ## 5. Workspace / Session
 
-`packages/workspace` 是下一阶段必须补上的统一应用层。
+`packages/workspace` 已实现为 Editor、CLI、MCP 共用的统一应用层。
 
 它至少负责：
 

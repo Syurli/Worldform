@@ -30,7 +30,7 @@ Worldform 不以“尽快把《战术巫师》或《物有所归》做进编辑�
 
 不扩展游戏业务。
 
-## P1-003 Workspace / Session
+## P1-003 Workspace / Session — 已完成
 
 建立统一应用层，集中：
 

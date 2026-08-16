@@ -7,7 +7,7 @@ P1-001 Core History / Serialization ✅
            ↓
 P1-002 Core Contract Hardening ✅
            ↓
-P1-003 Workspace / Session
+P1-003 Workspace / Session ✅
            ↓
 P1-004 Adapter SDK + Example Adapter
            ↓
@@ -33,7 +33,7 @@ P1-009 Clean-room Validation
 
 - `P1-001_CORE_HISTORY_SERIALIZATION.md` — 已完成
 - `P1-002_CORE_CONTRACT_HARDENING.md` — 已完成
-- `P1-003_WORKSPACE_SESSION.md`
+- `P1-003_WORKSPACE_SESSION.md` — 已完成
 - `P1-004_ADAPTER_SDK_EXAMPLE.md`
 - `P1-005_PASCAL_AUTHORING_ALPHA.md`
 - `P1-006_CLI_VALIDATION.md`

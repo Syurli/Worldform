@@ -45,3 +45,15 @@ load document
 ## 验收
 
 后续 Editor/CLI/MCP 可以只面向 Workspace API，不需要自己拼接 Core History 与 Adapter 调用。
+
+## 实施记录
+
+- 状态：已完成；
+- 新增 `@worldform/workspace` 与 `WorldformWorkspace`；
+- 实现 document/revision/history/drafts/snapshot/events；
+- 实现 create/preview/validate/apply/discard 与 undo/redo；
+- Preview 与 Draft 输入输出均深拷贝，不污染权威文档；
+- Apply 前始终重新执行 Core → Adapter 验证；
+- 旧 baseRevision 通过 `RevisionConflictError` 拒绝；
+- Adapter 异常归一为结构化 ValidationIssue；
+- `WorkspaceAdapterSession` 为 P1-004 AdapterHost 保留最小挂载点。

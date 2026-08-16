@@ -341,7 +341,9 @@ export function validateSceneDocument(document: SceneDocument): ValidationResult
 export function mergeValidationResults(...results: readonly ValidationResult[]): ValidationResult {
   const issues = results.flatMap((result) => result.issues)
   return {
-    valid: !issues.some((issue) => issue.severity === 'error'),
+    valid:
+      results.every((result) => result.valid) &&
+      !issues.some((issue) => issue.severity === 'error'),
     issues,
   }
 }

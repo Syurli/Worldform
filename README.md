@@ -65,7 +65,7 @@ Worldform/
 │  └─ editor/                    # Web 作者工具宿主
 ├─ packages/
 │  ├─ core/                      # 权威场景数据、Patch、History、Migration、Validation
-│  ├─ workspace/                 # 规划中的统一应用层 / Session
+│  ├─ workspace/                 # 统一应用层 / Session
 │  ├─ adapter-api/               # 最小稳定适配协议
 │  ├─ adapter-sdk/               # 规划中的第三方开发 SDK / 契约测试工具
 │  ├─ pascal-adapter/            # Pascal 作者视图隔离层
@@ -88,7 +88,7 @@ Worldform/
    └─ tasks/
 ```
 
-`packages/workspace`、`packages/adapter-sdk` 当前先建立职责边界文档；实际 package 实现分别由 P1-003、P1-004 完成，避免在路线校准提交中提前固化错误 API。
+`packages/workspace` 已实现 document/revision/History/DraftChange/Validation 的统一应用管线；`packages/adapter-sdk` 将由 P1-004 升级为正式第三方开发包。
 
 ## 当前阶段
 
