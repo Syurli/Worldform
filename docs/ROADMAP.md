@@ -91,7 +91,7 @@ CLI 必须调用 Workspace / Adapter Host，而不是复制一套逻辑。
 
 已提供人类/JSON 双输出、稳定退出码、动态 Adapter 加载、Core + Adapter 验证与正式 Node bin。
 
-## P1-007 MCP + Ghost Preview
+## P1-007 MCP + Ghost Preview — 已完成
 
 首批工具域：
 
@@ -106,6 +106,8 @@ preview.*
 完成：query、结构化 mutation、baseRevision、DraftChange、Validate、Ghost Preview、Apply/Discard、Undo/Redo。
 
 MCP 不提供任意文件系统或任意代码执行能力。
+
+已实现官方 v2 stdio MCP、15 个结构化工具、baseRevision/Draft 强制管线、Workspace Ghost diff 和同进程 Editor 联动。
 
 ## P1-008 Third-party Developer Kit
 

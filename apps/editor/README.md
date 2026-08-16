@@ -36,7 +36,7 @@ pnpm --filter @worldform/editor-host build
 ## 当前边界与后续职责
 
 - 已实现 Pascal/Three Authoring View、Scene Tree、Inspector、Validation 与 DraftChange；
-- P1-007 增加 MCP Ghost Preview 联动；
+- 已支持同进程 MCP 共享 Workspace：Draft 面板显示 `+新增 / ~修改 / -删除` Ghost 摘要，Apply/Undo/Redo 后自动重建 Pascal 投影；
 - Project Preview 与 Director 工作区保留到后续阶段；
 - Pascal 自带 Building/Level/Zone 选择策略不适用于通用节点，宿主使用 Pascal emitter/registry/outliner 上的通用选择管理器。
 

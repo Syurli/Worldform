@@ -3,14 +3,28 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "worldform-mcp": "./dist/stdio.js"
+  },
   "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {
-    "check": "tsc -p tsconfig.json --noEmit"
+    "build": "node scripts/build.mjs",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
+    "@modelcontextprotocol/server": "2.0.0",
+    "@worldform/adapter-api": "workspace:*",
     "@worldform/core": "workspace:*",
-    "@worldform/adapter-api": "workspace:*"
+    "@worldform/workspace": "workspace:*",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.0.0",
+    "@types/node": "24.13.3",
+    "@worldform/example-adapter": "workspace:*",
+    "esbuild": "0.28.2"
   }
 }

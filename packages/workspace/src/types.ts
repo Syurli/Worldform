@@ -6,6 +6,11 @@ import type {
   SceneRevision,
   ValidationResult,
 } from '@worldform/core'
+import type {
+  ProjectCapabilityDescriptor,
+  ProjectCapabilityRequest,
+  ProjectCapabilityResult,
+} from '@worldform/adapter-api'
 
 export interface CreateWorkspaceDraftInput {
   id: string
@@ -53,6 +58,10 @@ export type WorkspaceEventListener = (event: WorkspaceEvent) => void
 export interface WorkspaceAdapterSession {
   readonly adapterId: string
   validateDocument(document: SceneDocument): Promise<ValidationResult> | ValidationResult
+  listCapabilities?(): readonly ProjectCapabilityDescriptor[]
+  callCapability?(
+    request: ProjectCapabilityRequest,
+  ): Promise<ProjectCapabilityResult> | ProjectCapabilityResult
 }
 
 export interface WorldformWorkspaceOptions {

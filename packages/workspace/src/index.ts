@@ -1,4 +1,5 @@
 export * from './adapter-host.js'
 export * from './errors.js'
+export * from './ghost-preview.js'
 export * from './types.js'
 export * from './workspace.js'

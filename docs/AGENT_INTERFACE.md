@@ -48,7 +48,7 @@ CLI 面向 Agent、CI、批处理脚本和 Adapter 开发者。CLI 必须调用 
 
 ## 5. Level 3 — MCP
 
-MCP 用于操作正在运行中的 Workspace Session。
+MCP 已可操作正在运行中的 Workspace Session。
 
 首批工具域：
 
@@ -60,7 +60,17 @@ history.*
 preview.*
 ```
 
-Mutation 必须返回或构造结构化 Patch / DraftChange。
+已实现工具：
+
+```text
+scene.get / scene.query / scene.create / scene.update / scene.delete
+project.listCapabilities / project.callCapability / project.validate
+change.preview / change.apply / change.discard
+history.undo / history.redo
+preview.play / preview.stop
+```
+
+Mutation 必须返回或构造结构化 Patch / DraftChange。调用顺序是 `scene.get` 读取 revision，mutation 创建 Draft，`change.preview` 检查 Ghost diff，最后明确 Apply 或 Discard。
 
 MCP 不拥有独立 Scene 状态，不直接改 Pascal store，不提供任意文件系统或任意代码执行。
 
@@ -106,4 +116,4 @@ DraftChange
 
 ## 9. 当前阶段
 
-现阶段 Markdown/Skill、Core、Workspace、Adapter SDK/Host、Editor 与 CLI 已可用；P1-007 正式实现 MCP 与 Ghost Preview。MCP 仍只能作为 Workspace 入口，不能成为新的应用层。
+现阶段 Markdown/Skill、Core、Workspace、Adapter SDK/Host、Editor、CLI、MCP 与 Ghost Preview 已可用。MCP 仍只能作为 Workspace 入口，不能成为新的应用层。独立 stdio 进程与浏览器 Editor 的跨进程同步不属于 Phase 1；同进程宿主可直接共享 Workspace。

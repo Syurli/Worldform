@@ -5,19 +5,25 @@ import type {
 } from '@worldform/adapter-api'
 import {
   IDENTITY_TRANSFORM,
-  mergeValidationResults,
   serializeSceneDocument,
-  validateSceneDocument,
   type SceneNode,
   type ScenePatch,
   type ValidationResult,
 } from '@worldform/core'
 import { exampleAdapter, createExampleSceneDocument } from '@worldform/example-adapter'
 import { PascalAuthoringSession } from '@worldform/pascal-adapter'
-import { AdapterHost, WorldformWorkspace, type WorkspaceSnapshot } from '@worldform/workspace'
+import {
+  AdapterHost,
+  WorldformWorkspace,
+  createWorldformGhostPreview,
+  type WorldformGhostPreview,
+  type WorkspaceEvent,
+  type WorkspaceSnapshot,
+} from '@worldform/workspace'
 
 export interface EditorSessionSnapshot extends WorkspaceSnapshot {
   validation: ValidationResult | null
+  ghostPreviews: readonly WorldformGhostPreview[]
 }
 
 export type EditorSessionListener = (snapshot: EditorSessionSnapshot) => void
@@ -81,15 +87,30 @@ export class WorldformEditorSession {
   #listeners = new Set<EditorSessionListener>()
   #draftCounter = 0
   #nodeCounter = 0
+  #unsubscribeWorkspace: (() => void) | undefined
+  #projectionSync: Promise<void> = Promise.resolve()
 
   public async initialize(): Promise<void> {
     await this.host.initialize()
     await this.pascal.loadDocument(this.workspace.getDocument())
+    this.#unsubscribeWorkspace = this.workspace.subscribe((event) =>
+      this.handleWorkspaceEvent(event),
+    )
     this.emit()
   }
 
   public getSnapshot(): EditorSessionSnapshot {
-    return { ...this.workspace.getSnapshot(), validation: this.#validation }
+    const snapshot = this.workspace.getSnapshot()
+    const ghostPreviews: WorldformGhostPreview[] = []
+    for (const draft of snapshot.drafts) {
+      if (draft.status !== 'preview') continue
+      try {
+        ghostPreviews.push(createWorldformGhostPreview(this.workspace, draft.id))
+      } catch {
+        // 过期 Draft 仍保留在列表中，但不生成会误导用户的候选场景。
+      }
+    }
+    return { ...snapshot, validation: this.#validation, ghostPreviews }
   }
 
   public subscribe(listener: EditorSessionListener): () => void {
@@ -108,8 +129,7 @@ export class WorldformEditorSession {
     })
     await this.workspace.applyDraft(draftId)
     this.#validation = this.workspace.getDraft(draftId).validation
-    await this.pascal.loadDocument(this.workspace.getDocument())
-    this.emit()
+    await this.#projectionSync
   }
 
   public async createNode(type: string, parentId?: string): Promise<string> {
@@ -142,25 +162,19 @@ export class WorldformEditorSession {
   }
 
   public async validate(): Promise<ValidationResult> {
-    const document = this.workspace.getDocument()
-    this.#validation = mergeValidationResults(
-      validateSceneDocument(document),
-      await this.host.validateDocument(document),
-    )
+    this.#validation = await this.workspace.validateDocument()
     this.emit()
     return this.#validation
   }
 
   public async undo(): Promise<void> {
     if (!this.workspace.undo()) return
-    await this.pascal.loadDocument(this.workspace.getDocument())
-    this.emit()
+    await this.#projectionSync
   }
 
   public async redo(): Promise<void> {
     if (!this.workspace.redo()) return
-    await this.pascal.loadDocument(this.workspace.getDocument())
-    this.emit()
+    await this.#projectionSync
   }
 
   public serializeDocument(): string {
@@ -168,6 +182,8 @@ export class WorldformEditorSession {
   }
 
   public async dispose(): Promise<void> {
+    this.#unsubscribeWorkspace?.()
+    await this.#projectionSync
     this.pascal.dispose()
     await this.host.dispose()
     this.#listeners.clear()
@@ -176,5 +192,22 @@ export class WorldformEditorSession {
   private emit(): void {
     const snapshot = this.getSnapshot()
     for (const listener of this.#listeners) listener(snapshot)
+  }
+
+  /** 同进程 MCP 修改共享 Workspace 后，Editor 自动同步 Pascal 投影与 Draft 面板。 */
+  private handleWorkspaceEvent(event: WorkspaceEvent): void {
+    const documentChanged =
+      event.type === 'document.loaded' ||
+      event.type === 'draft.applied' ||
+      event.type === 'history.undone' ||
+      event.type === 'history.redone'
+    if (!documentChanged) {
+      this.emit()
+      return
+    }
+    this.#projectionSync = this.#projectionSync.then(async () => {
+      await this.pascal.loadDocument(this.workspace.getDocument())
+      this.emit()
+    })
   }
 }

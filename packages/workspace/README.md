@@ -13,6 +13,8 @@
 - Core → Adapter 验证管线；
 - Adapter Session 最小挂载点；
 - Workspace lifecycle 事件。
+- Project capability 的受控 dispatch；
+- 基于 Draft 的结构化 Ghost Preview。
 
 Editor、CLI 与 MCP 不应自己重新组合 History、revision 或 Draft 状态机。
 
@@ -44,6 +46,8 @@ Workspace 通过 `WorkspaceAdapterSession` 挂载 Adapter：
 interface WorkspaceAdapterSession {
   readonly adapterId: string
   validateDocument(document: SceneDocument): Promise<ValidationResult> | ValidationResult
+  listCapabilities?(): readonly ProjectCapabilityDescriptor[]
+  callCapability?(request: ProjectCapabilityRequest): Promise<ProjectCapabilityResult>
 }
 ```
 
@@ -54,3 +58,5 @@ P1-004 的 `AdapterHost` 已实现该接口，并负责 in-process lifecycle、�
 所有 document、draft、snapshot 和 event 都以深拷贝返回。外围监听器异常会被隔离，不能破坏 Workspace 权威状态。
 
 事件包括 document load、Draft create/validate/apply/discard、undo/redo 与 Adapter attach/detach。
+
+`createWorldformGhostPreview(workspace, draftId)` 比较当前正式文档和候选文档，统一返回节点/资源的 created、updated、deleted。它供 Editor 与 MCP 共同使用，不拥有独立 revision。

@@ -11,8 +11,10 @@ import {
   type ValidationIssue,
   type ValidationResult,
 } from '@worldform/core'
+import type { ProjectCapabilityDescriptor, ProjectCapabilityResult } from '@worldform/adapter-api'
 import { cloneWorkspaceData } from './clone.js'
 import {
+  WorkspaceAdapterCapabilityError,
   WorkspaceDraftNotFoundError,
   WorkspaceDraftStateError,
   WorkspaceValidationError,
@@ -209,6 +211,40 @@ export class WorldformWorkspace {
         adapterId: session.adapterId,
       })
     }
+  }
+
+  /** 通过已挂载 Adapter Session 暴露项目能力描述，不泄漏具体 Host。 */
+  public listProjectCapabilities(): readonly ProjectCapabilityDescriptor[] {
+    return cloneWorkspaceData(this.#adapterSession?.listCapabilities?.() ?? [])
+  }
+
+  /**
+   * 调用项目真实 capability，但不自动 Apply 返回的 Patch。
+   * Editor/MCP 必须把建议 Patch 建成 DraftChange 后再 Preview/Apply。
+   */
+  public async callProjectCapability(
+    capabilityId: string,
+    input: unknown,
+  ): Promise<ProjectCapabilityResult> {
+    if (!this.#adapterSession) {
+      throw new WorkspaceAdapterCapabilityError(
+        'workspace.adapter_not_attached',
+        'Workspace 没有挂载 Project Adapter。',
+      )
+    }
+    if (!this.#adapterSession.callCapability) {
+      throw new WorkspaceAdapterCapabilityError(
+        'workspace.capability_unavailable',
+        `Adapter Session 不支持 capability 调用：${capabilityId}`,
+      )
+    }
+    return cloneWorkspaceData(
+      await this.#adapterSession.callCapability({
+        capabilityId,
+        input: cloneWorkspaceData(input),
+        document: this.getDocument(),
+      }),
+    )
   }
 
   public subscribe(listener: WorkspaceEventListener): () => void {

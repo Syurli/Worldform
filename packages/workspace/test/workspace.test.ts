@@ -113,6 +113,29 @@ describe('WorldformWorkspace Draft 管线', () => {
 })
 
 describe('WorldformWorkspace Adapter 与事件', () => {
+  it('项目 capability 只返回建议 Patch，不绕过 Draft 修改正式文档', async () => {
+    const workspace = new WorldformWorkspace(createEmptySceneDocument({ id: 'capability' }), {
+      adapterSession: {
+        adapterId: 'capability.adapter',
+        validateDocument: () => ({ valid: true, issues: [] }),
+        listCapabilities: () => [{ id: 'createNode', title: 'Create Node', mutatesScene: true }],
+        callCapability: () => ({
+          output: { proposed: true },
+          patches: [{ op: 'create', node: createNode('proposed') }],
+        }),
+      },
+    })
+
+    expect(workspace.listProjectCapabilities()).toContainEqual(
+      expect.objectContaining({ id: 'createNode' }),
+    )
+    const result = await workspace.callProjectCapability('createNode', {})
+
+    expect(result.patches).toContainEqual(expect.objectContaining({ op: 'create' }))
+    expect(workspace.getDocument().nodes.proposed).toBeUndefined()
+    expect(workspace.getRevision()).toBe(0)
+  })
+
   it('可直接验证正式文档并复用 Core 与 Adapter 管线', async () => {
     const workspace = new WorldformWorkspace(
       createEmptySceneDocument({ id: 'direct-validation' }),

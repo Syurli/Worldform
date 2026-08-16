@@ -450,13 +450,26 @@ export function App({ session }: { session: WorldformEditorSession }) {
             {[...snapshot.drafts]
               .reverse()
               .slice(0, 5)
-              .map((draft) => (
-                <li key={draft.id}>
-                  <code>{draft.id}</code>
-                  <span>{draft.source.detail ?? draft.source.kind}</span>
-                  <em>{draft.status}</em>
-                </li>
-              ))}
+              .map((draft) => {
+                const ghost = snapshot.ghostPreviews.find(
+                  (preview) => preview.draft.id === draft.id,
+                )
+                return (
+                  <li key={draft.id}>
+                    <code>{draft.id}</code>
+                    <span>{draft.source.detail ?? draft.source.kind}</span>
+                    {ghost ? (
+                      <small className="ghost-diff">
+                        +{ghost.nodes.created.length} ~{ghost.nodes.updated.length} -
+                        {ghost.nodes.deleted.length}
+                      </small>
+                    ) : (
+                      <small />
+                    )}
+                    <em>{draft.status}</em>
+                  </li>
+                )
+              })}
           </ol>
           {(snapshot.validation?.issues ?? []).slice(0, 4).map((issue) => (
             <div className={`issue ${issue.severity}`} key={`${issue.code}-${issue.path}`}>

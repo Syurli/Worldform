@@ -302,10 +302,14 @@ select {
 }
 .draft-list li {
   display: grid;
-  grid-template-columns: 180px minmax(0, 1fr) auto;
+  grid-template-columns: 180px minmax(0, 1fr) auto auto;
   gap: 8px;
   color: #8795aa;
   font-size: 10px;
+}
+.draft-list .ghost-diff {
+  color: #d8ad68;
+  font-variant-numeric: tabular-nums;
 }
 .draft-list code {
   color: #7686e5;

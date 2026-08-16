@@ -88,7 +88,7 @@ Worldform/
    └─ tasks/
 ```
 
-`packages/workspace` 已实现统一应用管线与 AdapterHost；`packages/adapter-sdk` 已提供 descriptor helper、基础 schema 验证和 contract report；Pascal Authoring Alpha 已可使用通用 Example Adapter 完成场景树、3D 选择、Gizmo、动态 Inspector、Draft、验证和 Undo/Redo；CLI 已提供 validate、inspect、adapter check 和 export。
+`packages/workspace` 已实现统一应用管线、Ghost Preview 与 AdapterHost；`packages/adapter-sdk` 已提供 descriptor helper、基础 schema 验证和 contract report；Pascal Authoring Alpha 已可使用通用 Example Adapter 完成场景树、3D 选择、Gizmo、动态 Inspector、Draft、验证和 Undo/Redo；CLI 已提供 validate、inspect、adapter check 和 export；官方 v2 stdio MCP 已提供 15 个结构化工具。
 
 ## 当前阶段
 
@@ -107,9 +107,11 @@ pnpm test
 pnpm --filter @worldform/editor-host dev
 pnpm --filter @worldform/cli build
 node packages/cli/dist/bin.js --help
+pnpm --filter @worldform/mcp build
+node packages/mcp/dist/stdio.js --help
 ```
 
-当前 Core 契约、Workspace、Adapter SDK/Host、Example Adapter、Pascal Authoring Alpha 与 CLI 已完成。Phase 1 继续推进 MCP、第三方开发者包和 Clean-room 验收，不进入任何游戏 Adapter。
+当前 Core 契约、Workspace、Adapter SDK/Host、Example Adapter、Pascal Authoring Alpha、CLI、MCP 与 Ghost Preview 已完成。Phase 1 继续推进第三方开发者包和 Clean-room 验收，不进入任何游戏 Adapter。
 
 ## 许可说明
 

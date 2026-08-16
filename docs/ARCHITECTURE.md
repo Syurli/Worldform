@@ -197,6 +197,8 @@ Workspace 独占 revision 与 Undo/Redo。Pascal history 和 Store 都不是正�
 
 MCP 只是 Workspace 的一个外部入口，不能成为新的状态权威或任意代码执行通道。
 
+P1-007 使用官方 MCP v2 stdio server。Ghost Preview 已提升为 Workspace 公共能力：它从同一 DraftChange 计算节点/资源结构化差异，Editor 与 MCP 不各建预览模型。Project Capability 的 Patch 也必须回到 Draft 管线。详见 ADR-009。
+
 ## 11. 预览分层
 
 ### Authoring Preview

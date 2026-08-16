@@ -26,3 +26,14 @@ export class WorkspaceValidationError extends Error {
     super(`Workspace draft failed validation: ${draftId}`)
   }
 }
+
+export class WorkspaceAdapterCapabilityError extends Error {
+  public override readonly name = 'WorkspaceAdapterCapabilityError'
+
+  public constructor(
+    public readonly code: 'workspace.adapter_not_attached' | 'workspace.capability_unavailable',
+    message: string,
+  ) {
+    super(message)
+  }
+}
