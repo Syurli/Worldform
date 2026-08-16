@@ -1,7 +1,22 @@
 # Example Adapter
 
-这是 Phase 1 的通用 Project Adapter 验证样例，不代表任何真实游戏。
+Phase 1 唯一正式业务语义测试 Adapter。它完全虚构，不代表《战术巫师》或《物有所归》。
 
-P1-004 将在这里实现 Box / Prop / Marker / Zone / TestComponent 等最小语义，用于验证未知节点、动态 Inspector、validator、capability、Patch 返回、export 与 contract test。
+## 注册内容
 
-禁止把《战术巫师》或《物有所归》的业务规则复制到这里。
+- Node：Box、Prop、Light、Zone、Marker；
+- Component：dimensions、presentation、target、asset；
+- Property：number、string、boolean、enum、node reference、resource reference；
+- Capability：`validateScene`、`countObjects`、`createMarker`；
+- Export target：`example-json`。
+
+Editor 不应硬编码这些类型，而应从 Adapter descriptor 动态生成 Scene Tree、创建菜单、Authoring Preview 和 Inspector。
+
+## 验证
+
+```bash
+pnpm --filter @worldform/example-adapter check
+pnpm --filter @worldform/example-adapter test
+```
+
+测试证明 SDK contract、AdapterHost lifecycle、query/Patch capability、export 与 Workspace Draft 应用能够形成闭环。

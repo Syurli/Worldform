@@ -45,7 +45,7 @@ Worldform 不以“尽快把《战术巫师》或《物有所归》做进编辑�
 
 Editor、CLI、MCP 后续只能调用这一层。
 
-## P1-004 Adapter SDK + Example Adapter
+## P1-004 Adapter SDK + Example Adapter — 已完成
 
 完成：
 

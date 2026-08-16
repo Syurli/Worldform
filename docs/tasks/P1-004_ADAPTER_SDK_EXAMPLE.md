@@ -42,3 +42,15 @@
 - contract test 能发现 manifest/schema/capability 常见错误；
 - Workspace 可加载并调用它；
 - 无 TWR/Place 业务依赖。
+
+## 实施记录
+
+- 状态：已完成；
+- adapter-api 新增 lifecycle、Node/Component/Property/Preview descriptor 与结构化错误；
+- adapter-sdk 新增 define helper、descriptor validator、fixture 与 contract report；
+- Workspace 新增 in-process `AdapterHost`；
+- Host 实现 API/schema 检查、timeout、cancellation、capability/export dispatch；
+- Example Adapter 注册 Box/Prop/Light/Zone/Marker 与六类属性；
+- Example Adapter 实现 validator、query capability、Patch capability 与 export target；
+- Workspace 可挂载 Example Adapter Host 并将 capability Patch 应用为 Draft；
+- 设计决策见 ADR-007。

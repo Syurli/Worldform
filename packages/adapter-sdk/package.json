@@ -1,5 +1,5 @@
 {
-  "name": "@worldform/workspace",
+  "name": "@worldform/adapter-sdk",
   "version": "0.0.0",
   "private": true,
   "type": "module",

@@ -1,7 +1,8 @@
-import { createEmptySceneDocument, VersionCompatibilityError } from '@worldform/core'
+import { createEmptySceneDocument } from '@worldform/core'
 import { describe, expect, it } from 'vitest'
 import {
   assertAdapterMatchesDocument,
+  ProjectAdapterError,
   WORLDFORM_ADAPTER_API_VERSION,
   type WorldformProjectAdapter,
 } from '../src/index.js'
@@ -15,9 +16,14 @@ function createAdapter(adapterApiVersion: string): WorldformProjectAdapter {
       sceneSchemaVersion: '2.0.0',
       version: '1.4.0',
     },
+    listNodeTypes: () => [],
+    listComponentTypes: () => [],
+    listValidators: () => [],
     listCapabilities: () => [],
     validateDocument: () => ({ valid: true, issues: [] }),
     callCapability: async () => ({ output: null }),
+    listExportTargets: () => [],
+    exportDocument: async () => ({ fileName: 'empty.txt', mediaType: 'text/plain', content: '' }),
   }
 }
 
@@ -38,7 +44,7 @@ describe('Adapter 版本契约', () => {
     const adapter = createAdapter('2.0.0')
     const document = createEmptySceneDocument({ id: 'incompatible-adapter' })
 
-    expect(() => assertAdapterMatchesDocument(adapter, document)).toThrow(VersionCompatibilityError)
+    expect(() => assertAdapterMatchesDocument(adapter, document)).toThrow(ProjectAdapterError)
   })
 
   it('拒绝不匹配的项目场景 schema', () => {

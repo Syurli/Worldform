@@ -38,7 +38,7 @@ Undo/Redo 是新的运行态修改，因此成功时同样递增 revision。加�
 
 ## Adapter 挂载
 
-P1-003 只定义 `WorkspaceAdapterSession`：
+Workspace 通过 `WorkspaceAdapterSession` 挂载 Adapter：
 
 ```ts
 interface WorkspaceAdapterSession {
@@ -47,7 +47,7 @@ interface WorkspaceAdapterSession {
 }
 ```
 
-P1-004 的正式 `AdapterHost` 将实现该接口并负责 lifecycle、timeout、cancellation 与 capability dispatch。Workspace 不感知 Transport。
+P1-004 的 `AdapterHost` 已实现该接口，并负责 in-process lifecycle、版本检查、timeout、cancellation、capability/export dispatch 与结构化错误归一化。Workspace 不感知 Transport。
 
 ## 状态隔离与事件
 

@@ -1,5 +1,5 @@
 {
-  "name": "@worldform/workspace",
+  "name": "@worldform/example-adapter",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@worldform/adapter-api": "workspace:*",
-    "@worldform/core": "workspace:*"
+    "@worldform/adapter-sdk": "workspace:*",
+    "@worldform/core": "workspace:*",
+    "@worldform/workspace": "workspace:*"
   }
 }

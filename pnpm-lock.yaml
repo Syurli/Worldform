@@ -30,8 +30,32 @@ importers:
         specifier: workspace:*
         version: link:../../packages/pascal-adapter
 
+  examples/example-adapter:
+    dependencies:
+      '@worldform/adapter-api':
+        specifier: workspace:*
+        version: link:../../packages/adapter-api
+      '@worldform/adapter-sdk':
+        specifier: workspace:*
+        version: link:../../packages/adapter-sdk
+      '@worldform/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@worldform/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
+
   packages/adapter-api:
     dependencies:
+      '@worldform/core':
+        specifier: workspace:*
+        version: link:../core
+
+  packages/adapter-sdk:
+    dependencies:
+      '@worldform/adapter-api':
+        specifier: workspace:*
+        version: link:../adapter-api
       '@worldform/core':
         specifier: workspace:*
         version: link:../core
@@ -70,6 +94,9 @@ importers:
 
   packages/workspace:
     dependencies:
+      '@worldform/adapter-api':
+        specifier: workspace:*
+        version: link:../adapter-api
       '@worldform/core':
         specifier: workspace:*
         version: link:../core

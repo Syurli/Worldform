@@ -24,11 +24,11 @@ Project Adapter
 
 ### `@worldform/adapter-sdk`
 
-面向第三方开发者的便利层，规划提供 schema/descriptor helper、fixture、contract test、模板、诊断和后续脚手架。
+面向第三方开发者的便利层，已提供 schema/descriptor helper、fixture、contract report 与诊断入口；模板和发布流程在 P1-008 完成。
 
 ### Adapter Host
 
-属于 Worldform Workspace，负责加载、生命周期、timeout/cancellation、transport、capability dispatch 与错误归一化。
+属于 Worldform Workspace，当前已实现 in-process lifecycle、timeout/cancellation、capability/export dispatch 与错误归一化；后续 Transport 复用同一业务协议。
 
 不要把 stdio / HTTP / IPC 细节直接写进业务 Adapter 类型。
 

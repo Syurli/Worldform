@@ -134,7 +134,7 @@ P1-002 已收口命名、主版本兼容规则与显式迁移边界，详见 ADR
 
 ### adapter-sdk
 
-面向第三方开发者，提供：
+已实现面向第三方开发者的：
 
 - descriptor/schema 辅助；
 - 测试 fixture；
@@ -145,7 +145,7 @@ P1-002 已收口命名、主版本兼容规则与显式迁移边界，详见 ADR
 
 ### Adapter Host
 
-属于 Workspace/Application 侧，负责：
+已由 Workspace 的 in-process `AdapterHost` 实现，负责：
 
 - 加载；
 - 生命周期；
