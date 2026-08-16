@@ -38,7 +38,7 @@
 
 ## 当前阶段
 
-当前为 Phase 1 / Platform Alpha。Core、Workspace、Adapter SDK、Pascal Authoring Alpha、CLI、MCP 与第三方开发者包已完成；阶段门槛是 P1-009 Clean-room Validation。
+Phase 1 / Platform Alpha 已完成。Core、Workspace、Adapter SDK、Pascal Authoring Alpha、CLI、MCP、第三方开发者包与 Museum Clean-room 全部通过；Phase 2 真实项目必须继续作为独立消费者接入。
 
 ## 常用检查
 

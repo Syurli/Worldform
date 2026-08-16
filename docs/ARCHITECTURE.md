@@ -187,6 +187,8 @@ P1-005 已锁定 Pascal `@pascal-app/core` / `viewer@0.9.2`。隔离层只注册
 
 Workspace 独占 revision 与 Undo/Redo。Pascal history 和 Store 都不是正式状态，详见 ADR-008。
 
+P1-009 后 Editor Session 由正式 Adapter 与 SceneDocument 构造；Example 只作为仓库开发默认值。受信任的外部项目可通过 browser ESM Adapter URL 与 SceneDocument URL 启动，菜单、Inspector 和 Preview 继续只依赖 descriptor，详见 ADR-011。
+
 ## 10. Agent Interface
 
 三级入口：
@@ -221,7 +223,7 @@ Director 后续通过 Workspace 进入统一 Patch / Validation / History 管线
 
 > 是否至少两个真实项目都需要它，而且它无法合理留在 Workspace、Adapter SDK 或 Adapter 中？
 
-## 14. Phase 1 完成定义
+## 14. Phase 1 完成定义（已满足）
 
 Platform Alpha 完成时应满足：
 
@@ -233,3 +235,5 @@ Platform Alpha 完成时应满足：
 - Skill 与第三方文档可用；
 - Clean-room 独立仓库能在不修改 Worldform 的情况下实现 Adapter；
 - 之后才开始 TWR / Place 外部接入。
+
+2026-08-17，Museum Clean-room 独立仓库完成 package 安装、contract/CLI/Editor/MCP/Capability/Export 全闭环；报告见 `docs/reports/PHASE1_CLEAN_ROOM_REPORT.md`。

@@ -43,6 +43,19 @@ Pascal Store 是可重建的工作副本，不参与 SceneDocument 序列化，�
 
 Worldform Workspace 唯一拥有 revision、DraftChange 和 Undo/Redo History。Pascal 内部 history 不作为正式提交记录。一次 Gizmo 手势结束后生成一组 Patch 和一个 Draft；Apply 成功后才进入 Workspace History。
 
+## Editor 视觉与面板基线
+
+Worldform Authoring Editor 不建立一套与 Pascal 冲突的通用仪表盘视觉。面板排版与配色以锁定上游提交的 Pascal Editor 为基线，并只做 Worldform 语义扩展：
+
+- 使用 Pascal 的中性 `#171717 / #2C2C2E` 灰阶与低对比边框，不使用大面积品牌色；
+- 保留左侧场景栏、圆角视口、32px 紧凑分组工具条和悬浮 Inspector 卡片的层级；
+- 选中态使用轻量灰阶/边线，危险与验证结果才使用语义色；
+- Worldform 增加的 Draft、revision、Adapter 信息沿用相同面板密度；
+- 固定界面文案优先中文；项目 Adapter 提供的业务名称按原值显示；
+- 后续面板新增或重排必须先与 Pascal 现有组件/布局比较，避免另起设计语言。
+
+Worldform 不复制 Pascal 上游 UI 源码；当前 Host CSS 复现其公开的 design token 与布局原则，正式数据边界仍由本 ADR 其它部分约束。
+
 ## 2D Floorplan 判断
 
 2D floorplan 对空间平面编辑有长期价值，但 Pascal 当前 2D 工作流假设 Building/Level/Zone 语义。Phase 1 不复制这套项目模型，也不在 Core 引入楼层规则。后续应先定义可由 Adapter 描述的通用 2D 投影协议，再评估复用 Pascal 2D 包。

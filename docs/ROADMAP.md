@@ -124,7 +124,7 @@ MCP 不提供任意文件系统或任意代码执行能力。
 
 已提供 Alpha 公共 package 组、dist-only tarball、最小外部模板、完整接入指南、兼容矩阵与仓库外安装验收报告。
 
-## P1-009 Clean-room Validation
+## P1-009 Clean-room Validation — 已完成
 
 建立一个完全独立的测试仓库：
 
@@ -138,6 +138,8 @@ MCP 不提供任意文件系统或任意代码执行能力。
 8. 输出验收报告。
 
 **P1-009 是进入真实游戏接入的阶段门槛。**
+
+Museum Clean-room 独立仓库已完成 package、SDK、CLI、Editor、MCP、Ghost Preview、Capability 与 Export 全闭环。Phase 1 / Platform Alpha 门槛已通过。
 
 ---
 

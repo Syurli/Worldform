@@ -1,4 +1,4 @@
-# P1-009 — Clean-room Validation
+# P1-009 — Clean-room Validation（已完成）
 
 ## 目标
 
@@ -27,3 +27,7 @@
 ## 阶段门槛
 
 只有本任务通过，才能开始 Phase 2 的《战术巫师》和《物有所归》正式外部 Adapter。
+
+## 完成记录
+
+Museum Clean-room 独立 Git 仓库已通过 2 个节点/组件、validator、capability、export、contract test、CLI、Editor 动态 Inspector，以及官方 MCP Query → Draft → Ghost Preview → Apply → Undo 全闭环。完整证据与剩余限制见 `docs/reports/PHASE1_CLEAN_ROOM_REPORT.md`。

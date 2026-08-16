@@ -154,7 +154,19 @@ worldform export ./scene.worldform.json --adapter ./dist/index.js --target proje
 
 CLI 成功返回 0；参数错误为 2；读取错误为 3；验证失败为 10；Adapter 错误为 11；其它执行错误为 12。CI 应依据退出码失败，并保留 JSON 诊断。
 
-## 6. MCP 连接
+## 6. Editor 加载
+
+Platform Alpha Editor 可从受信任的项目服务加载 browser ESM Adapter 与 SceneDocument：
+
+```text
+http://127.0.0.1:4173/
+  ?adapter=http://127.0.0.1:4310/dist/browser-adapter.js
+  &scene=http://127.0.0.1:4310/scene.worldform.json
+```
+
+`adapter` 与 `scene` 必须同时提供。Adapter 需要预先打成浏览器可独立解析的 ESM，跨源服务需要 CORS。该模块会在浏览器中执行，只能加载开发者明确信任的项目代码。Editor 使用同一 Adapter descriptor 动态生成创建菜单、Authoring Preview 与 Inspector；任何修改仍进入 Workspace Draft/Patch。
+
+## 7. MCP 连接
 
 先构建 Adapter，再让 MCP host 启动公开 stdio bin：
 
@@ -184,7 +196,7 @@ CLI 成功返回 0；参数错误为 2；读取错误为 3；验证失败为 10�
 
 MCP 不提供 shell、任意文件读写或任意代码执行。跨进程 Editor 同步不属于当前 stdio Alpha；在同一宿主进程共享 Workspace 时，Editor 与 MCP 共享 Draft/Ghost 状态。
 
-## 7. 版本与升级
+## 8. 版本与升级
 
 四类版本不能混用：
 
@@ -195,7 +207,7 @@ MCP 不提供 shell、任意文件读写或任意代码执行。跨进程 Editor
 
 具体支持范围见 `COMPATIBILITY.md`。Alpha 期间升级公共包应整组升级；项目 schema 变化必须提供项目侧显式迁移，不能静默接受不匹配文档。
 
-## 8. 故障排查
+## 9. 故障排查
 
 | 现象 | 检查 |
 | --- | --- |
@@ -206,9 +218,10 @@ MCP 不提供 shell、任意文件读写或任意代码执行。跨进程 Editor
 | capability 产生修改但场景未变 | 先取得 Draft ID，再执行 `change.preview` 和 `change.apply` |
 | stdio MCP 无响应 | 不要向 stdout 打日志；检查 scene/adapter 路径以 MCP 进程工作目录解析 |
 | Editor 预览与数据不一致 | 以 Workspace `SceneDocument` 为权威，重新投影；不要直接改 Three/Pascal 状态 |
+| 外部 Editor 项目加载失败 | 同时提供完整 URL；把 Adapter 打成 browser ESM；让项目服务允许 CORS |
 | 真实项目调用超时 | 让项目调用响应 AbortSignal，并在 Adapter 层归一化错误，不在 Core 重试 |
 
-## 9. 完成清单
+## 10. 完成清单
 
 - Adapter ID、API、项目 schema、实现版本明确；
 - Node/Component/Property descriptor 完整；

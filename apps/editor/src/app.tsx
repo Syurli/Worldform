@@ -166,7 +166,7 @@ function TransformEditor({
   ]
   return (
     <section className="inspector-section">
-      <h3>Transform</h3>
+      <h3>变换</h3>
       {rows.map((row) => (
         <div className="vector-row" key={row.key}>
           <span>{row.label}</span>
@@ -206,7 +206,7 @@ function Inspector({
   components: readonly ProjectComponentDescriptor[]
   onPatch: (patch: ScenePatch, detail: string) => void
 }) {
-  if (!node) return <div className="empty-state">在 Scene Tree 或视口中选择节点</div>
+  if (!node) return <div className="empty-state">在场景层级或视口中选择节点</div>
   const descriptors = new Map(components.map((component) => [component.id, component]))
   return (
     <div className="inspector-content">
@@ -230,7 +230,7 @@ function Inspector({
       <TransformEditor
         node={node}
         onCommit={(transform) =>
-          onPatch({ op: 'update', id: node.id, changes: { transform } }, '修改 Transform')
+          onPatch({ op: 'update', id: node.id, changes: { transform } }, '修改变换')
         }
       />
       {Object.entries(node.components ?? {}).map(([componentId, componentValue]) => {
@@ -266,6 +266,17 @@ function Inspector({
       })}
     </div>
   )
+}
+
+function draftStatusLabel(status: EditorSessionSnapshot['drafts'][number]['status']): string {
+  switch (status) {
+    case 'preview':
+      return '待应用'
+    case 'applied':
+      return '已应用'
+    case 'discarded':
+      return '已丢弃'
+  }
 }
 
 /** Worldform Authoring Alpha：Pascal 视口 + Workspace 驱动的通用编辑器壳。 */
@@ -307,7 +318,7 @@ export function App({ session }: { session: WorldformEditorSession }) {
     anchor.download = `${snapshot.document.id}.worldform.json`
     anchor.click()
     URL.revokeObjectURL(url)
-    setStatus('SceneDocument 已导出')
+    setStatus('场景文档已导出')
   }
 
   return (
@@ -317,7 +328,7 @@ export function App({ session }: { session: WorldformEditorSession }) {
           <span className="brand-mark">万</span>
           <div>
             <strong>万类 Worldform</strong>
-            <small>Pascal Authoring Alpha</small>
+            <small>{session.host.adapter.manifest.displayName} · Pascal 创作预览 Alpha</small>
           </div>
         </div>
         <div className="toolbar-group">
@@ -396,21 +407,21 @@ export function App({ session }: { session: WorldformEditorSession }) {
           校验
         </button>
         <button className="primary" onClick={exportDocument} type="button">
-          导出 SceneDocument
+          导出场景文档
         </button>
       </header>
 
       <div className="workspace-grid">
         <aside className="panel scene-panel">
           <div className="panel-title">
-            <span>Scene Tree</span>
-            <small>{Object.keys(snapshot.document.nodes).length} nodes</small>
+            <span>场景层级</span>
+            <small>{Object.keys(snapshot.document.nodes).length} 个节点</small>
           </div>
           <SceneTree document={snapshot.document} onSelect={selectNode} selectedId={selectedId} />
         </aside>
 
         <section className="viewport-panel">
-          <div className="viewport-badge">Pascal 0.9.2 · revision {snapshot.revision}</div>
+          <div className="viewport-badge">Pascal 0.9.2 · 场景版本 {snapshot.revision}</div>
           <PascalViewport
             mode={gizmoMode}
             onCommit={() => void run('提交 Gizmo', () => session.commitPascalChanges())}
@@ -420,8 +431,8 @@ export function App({ session }: { session: WorldformEditorSession }) {
 
         <aside className="panel inspector-panel">
           <div className="panel-title">
-            <span>Inspector</span>
-            <small>Adapter descriptors</small>
+            <span>属性</span>
+            <small>适配器动态描述</small>
           </div>
           <Inspector
             components={session.componentTypes}
@@ -433,7 +444,7 @@ export function App({ session }: { session: WorldformEditorSession }) {
 
         <section className="panel draft-panel">
           <div className="panel-title">
-            <span>Workspace / Draft</span>
+            <span>工作区 / 修改草稿</span>
             <small>{status}</small>
           </div>
           <div className="draft-summary">
@@ -444,7 +455,7 @@ export function App({ session }: { session: WorldformEditorSession }) {
                   : '校验失败'
                 : '尚未校验'}
             </span>
-            <span>{snapshot.drafts.length} changes</span>
+            <span>{snapshot.drafts.length} 项修改</span>
           </div>
           <ol className="draft-list">
             {[...snapshot.drafts]
@@ -466,7 +477,7 @@ export function App({ session }: { session: WorldformEditorSession }) {
                     ) : (
                       <small />
                     )}
-                    <em>{draft.status}</em>
+                    <em>{draftStatusLabel(draft.status)}</em>
                   </li>
                 )
               })}

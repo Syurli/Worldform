@@ -10,7 +10,7 @@
 
 Worldform 从第一天按照“第三方可接入的平台”开发，而不是先内嵌某一款游戏再反向抽象。
 
-当前目标是 **Platform Alpha / Third-party Ready**：
+当前已完成 **Platform Alpha / Third-party Ready**：
 
 ```text
 Core
@@ -114,7 +114,7 @@ pnpm --filter @worldform/mcp build
 node packages/mcp/dist/stdio.js --help
 ```
 
-当前 Core 契约、Workspace、Adapter SDK/Host、Example Adapter、Pascal Authoring Alpha、CLI、MCP、Ghost Preview 与第三方开发者包已完成。外部开发从 [`templates/adapter-minimal`](templates/adapter-minimal) 与 [`docs/THIRD_PARTY_INTEGRATION.md`](docs/THIRD_PARTY_INTEGRATION.md) 开始；Phase 1 只剩 Clean-room 阶段门槛，不进入任何游戏 Adapter。
+Core 契约、Workspace、Adapter SDK/Host、Example Adapter、Pascal Authoring Alpha、CLI、MCP、Ghost Preview、第三方开发者包与 Museum Clean-room 已全部通过。外部开发从 [`templates/adapter-minimal`](templates/adapter-minimal) 与 [`docs/THIRD_PARTY_INTEGRATION.md`](docs/THIRD_PARTY_INTEGRATION.md) 开始；验收证据见 [`docs/reports/PHASE1_CLEAN_ROOM_REPORT.md`](docs/reports/PHASE1_CLEAN_ROOM_REPORT.md)。Phase 2 尚未在本仓库开始。
 
 ## 许可说明
 

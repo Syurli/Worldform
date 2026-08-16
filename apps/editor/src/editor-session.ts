@@ -2,10 +2,12 @@ import type {
   ProjectComponentDescriptor,
   ProjectNodeTypeDescriptor,
   ProjectPropertyDescriptor,
+  WorldformProjectAdapter,
 } from '@worldform/adapter-api'
 import {
   IDENTITY_TRANSFORM,
   serializeSceneDocument,
+  type SceneDocument,
   type SceneNode,
   type ScenePatch,
   type ValidationResult,
@@ -75,13 +77,11 @@ function createInitialComponents(
 
 /** P1-005 Web UI 的无 React 控制器；所有写入统一经 Workspace DraftChange。 */
 export class WorldformEditorSession {
-  readonly host = new AdapterHost(exampleAdapter)
-  readonly workspace = new WorldformWorkspace(createExampleSceneDocument(), {
-    adapterSession: this.host,
-  })
-  readonly nodeTypes = this.host.listNodeTypes()
-  readonly componentTypes = this.host.listComponentTypes()
-  readonly pascal = new PascalAuthoringSession(this.nodeTypes)
+  readonly host: AdapterHost
+  readonly workspace: WorldformWorkspace
+  readonly nodeTypes: readonly ProjectNodeTypeDescriptor[]
+  readonly componentTypes: readonly ProjectComponentDescriptor[]
+  readonly pascal: PascalAuthoringSession
 
   #validation: ValidationResult | null = null
   #listeners = new Set<EditorSessionListener>()
@@ -89,6 +89,21 @@ export class WorldformEditorSession {
   #nodeCounter = 0
   #unsubscribeWorkspace: (() => void) | undefined
   #projectionSync: Promise<void> = Promise.resolve()
+
+  /**
+   * Editor 只依赖正式 Adapter 契约；默认 Example 项目仅用于直接启动仓库开发环境。
+   * 外部项目通过启动配置注入自身 Adapter 与 SceneDocument，无需修改 Editor。
+   */
+  public constructor(
+    adapter: WorldformProjectAdapter = exampleAdapter,
+    document: SceneDocument = createExampleSceneDocument(),
+  ) {
+    this.host = new AdapterHost(adapter)
+    this.workspace = new WorldformWorkspace(document, { adapterSession: this.host })
+    this.nodeTypes = this.host.listNodeTypes()
+    this.componentTypes = this.host.listComponentTypes()
+    this.pascal = new PascalAuthoringSession(this.nodeTypes)
+  }
 
   public async initialize(): Promise<void> {
     await this.host.initialize()
